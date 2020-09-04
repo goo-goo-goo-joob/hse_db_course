@@ -1,1 +1,2 @@
-include db_cinema_project/ui/*.ui
+include requirements.txt
+include db_cinema_project/ui/*.py

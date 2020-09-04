@@ -48,7 +48,7 @@ with open('README.md', 'rt') as f:
 
 setup(
     name=module_name,
-    version='0.1.0',
+    version='0.1.1',
     description='DB project for cinema',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -67,7 +67,6 @@ setup(
         'Operating System :: Microsoft',
         'Operating System :: Microsoft :: Windows :: Windows 10',
         'Operating System :: MacOS',
-        'Operating System :: MacOS :: MacOS X',
     ],
     keywords=['python python3 qt database mysql'],
     packages=find_packages(exclude=['tests']),
