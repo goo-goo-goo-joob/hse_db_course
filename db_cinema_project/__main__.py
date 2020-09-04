@@ -1,8 +1,10 @@
 import sys  # sys нужен для передачи argv в QApplication
 from PyQt5 import QtWidgets
-from .ui import project  # Это наш конвертированный файл дизайна
+
+from db_cinema_project.ui import project  # Это наш конвертированный файл дизайна
 
 
+# pylint: disable=I1101
 class ExampleApp(QtWidgets.QMainWindow, project.Ui_MainWindow):
     def __init__(self):
         # Это здесь нужно для доступа к переменным, методам
