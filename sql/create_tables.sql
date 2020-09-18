@@ -12,38 +12,31 @@ DROP table IF EXISTS жанр;
 DROP table IF EXISTS режиссер;
 DROP table IF EXISTS возрастноеограничение;
 
+DROP trigger IF EXISTS client_check;
+
 create table покупатель
 (
     id      int primary key auto_increment,
     фио     varchar(100) not null,
-    телефон varchar(25)  unique,
+    телефон varchar(12)  null unique,
     почта   varchar(100) not null unique
 );
 
 DELIMITER $$
-CREATE TRIGGER trig_mail_check
+CREATE TRIGGER client_check
     BEFORE INSERT
     ON покупатель
     FOR EACH ROW
 BEGIN
     IF (NEW.почта REGEXP '^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+$') = 0 THEN
-        SIGNAL SQLSTATE '01001'
+        SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите существующую электронную почту';
     END IF;
-END$$
-DELIMITER ;
-
-DELIMITER $$
-CREATE TRIGGER trig_phone_check
-    BEFORE INSERT
-    ON покупатель
-    FOR EACH ROW
-BEGIN
-    IF (NEW.телефон REGEXP '^\\+[0-9][[:space:]-][0-9]{3}-?[0-9]{2}-?[0-9]{2}$') = 0 THEN
-        SIGNAL SQLSTATE '01002'
+    IF (NEW.телефон REGEXP '^\\+7[0-9]{10}$') = 0 THEN
+        SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите существующий номер телефона';
     END IF;
-END$$
+END; $$
 DELIMITER ;
 
 create table типзала
@@ -168,3 +161,6 @@ create table жанрыфильмов
         foreign key (idжанр) references жанр (id),
     unique (idфильм, idжанр)
 );
+
+INSERT INTO cinemadb.покупатель (фио, телефон, почта)
+VALUES ('Самоделкина Мария Владимировна', '+78005553535', 'mvsamodelkina_4@edu.hse.ru')
