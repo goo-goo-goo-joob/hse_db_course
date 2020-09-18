@@ -98,7 +98,8 @@ create table сеанс
     id          int primary key auto_increment,
     датавремя   datetime not null,
     idзал       int      not null,
-    idтипсеанса int      not null,
+    idтипсеанса int,
+    цена        int unsigned,
     idфильм     int      not null,
     constraint зал_fk
         foreign key (idзал) references зал (id),
@@ -114,7 +115,6 @@ create table билетнаместо
     id           int primary key auto_increment,
     номерместа   int not null,
     номерряда    int not null,
-    цена         int not null,
     idпокупатель int,
     idсеанс      int not null,
     constraint покупатель_fk
