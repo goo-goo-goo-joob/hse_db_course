@@ -1,5 +1,5 @@
-DROP trigger IF EXISTS chech_покупатель;
-DROP trigger IF EXISTS chech_сеанс;
+DROP trigger IF EXISTS check_покупатель;
+DROP trigger IF EXISTS check_сеанс;
 DROP trigger IF EXISTS create_сеанс;
 
 DELIMITER $$
@@ -10,11 +10,11 @@ CREATE TRIGGER check_покупатель
 BEGIN
     IF (NEW.почта REGEXP '^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+$') = 0 THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Введите существующую электронную почту';
+            SET MESSAGE_TEXT = 'Введите существующую электронную почту.';
     END IF;
     IF (NEW.телефон REGEXP '^\\+7[0-9]{10}$') = 0 THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Введите существующий номер телефона';
+            SET MESSAGE_TEXT = 'Введите существующий номер телефона соответствии с форматом +7xxxxxxxxxx.';
     END IF;
 END;
 $$
@@ -40,26 +40,36 @@ CREATE TRIGGER create_сеанс
     ON сеанс
     FOR EACH ROW
 BEGIN
-    SELECT @типсеанса := типсеанса.id, @надбавкасеанса := типсеанса.надбавкасеанса
+    DECLARE типсеанса_ int unsigned;
+    DECLARE надбавкасеанса_ int unsigned;
+    DECLARE надбавказала_ int unsigned;
+    DECLARE базоваяцена_ int unsigned;
+    DECLARE макс_ряд_ int unsigned;
+    DECLARE макс_место_ int unsigned;
+
+    SELECT типсеанса.id, типсеанса.надбавкасеанса
+    INTO типсеанса_, надбавкасеанса_
     FROM типсеанса
     WHERE типсеанса.времяначала <= TIME(NEW.датавремя)
       and типсеанса.времяконца >= TIME(NEW.датавремя);
 
-    SELECT @надбавказала := типзала.надбавказала
+    SELECT типзала.надбавказала
+    INTO надбавказала_
     FROM типзала
     WHERE типзала.id = (
         SELECT зал.idтипзала
         FROM зал
         WHERE зал.id = NEW.idзал);
 
-    SELECT @базоваяцена := кинотеатр.базоваяцена
+    SELECT кинотеатр.базоваяцена
+    INTO базоваяцена_
     FROM кинотеатр
     WHERE кинотеатр.id = (
         SELECT зал.idкинотеатр
         FROM зал
         WHERE зал.id = NEW.idзал);
 
-    SET @цена = @надбавкасеанса + @надбавказала + @базоваяцена;
+    SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
 
     UPDATE сеанс
     SET цена        = @цена,
@@ -68,17 +78,19 @@ BEGIN
 
     SET @ряд = 1, @место = 1;
 
-    SELECT @макс_ряд := числорядов
+    SELECT числорядов
+    INTO макс_ряд_
     FROM зал
     WHERE зал.id = NEW.idзал;
 
-    SELECT @макс_место := длинаряда
+    SELECT длинаряда
+    INTO макс_место_
     FROM зал
     WHERE зал.id = NEW.idзал;
 
-    while @ряд <= @макс_ряд
+    while @ряд <= макс_ряд_
         do
-            while @место <= @макс_место
+            while @место <= макс_место_
                 do
                     INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
                     VALUES (@место, @ряд, NEW.id);

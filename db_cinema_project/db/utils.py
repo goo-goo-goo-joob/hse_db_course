@@ -1,7 +1,6 @@
 import os
 
 import pymysql
-from PyQt5 import QtSql
 
 
 class DBCinema:
@@ -29,6 +28,31 @@ class DBCinema:
         # return self.query.result()
         with self.conn.cursor() as c:
             sql = "SELECT * FROM сотрудники "
+            c.execute(sql)
+            return c.fetchall()
+
+    def add_user(self, name, email, number):
+        with self.conn.cursor() as c:
+            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта) VALUES( % s, % s, % s)'
+            c.execute(sql, (name, number, email))
+            self.conn.commit()
+            return c.lastrowid
+
+    def check_for_email(self, email):
+        with self.conn.cursor() as c:
+            sql = "SELECT id FROM покупатель WHERE почта = %s"
+            c.execute(sql, email)
+            return c.rowcount, c.fetchone()
+
+    def get_user_name_by_id(self, uid):
+        with self.conn.cursor() as c:
+            sql = "SELECT фио FROM покупатель WHERE id = %s"
+            c.execute(sql, uid)
+            return c.fetchone()[0]
+
+    def get_all_user_numbers(self):
+        with self.conn.cursor() as c:
+            sql = "SELECT фио, телефон FROM покупатель "
             c.execute(sql)
             return c.fetchall()
 
