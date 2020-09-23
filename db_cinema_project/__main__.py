@@ -5,6 +5,7 @@ import sys  # sys нужен для передачи argv в QApplication
 from PyQt5 import QtWidgets
 
 from db_cinema_project.db import utils
+from db_cinema_project.db.hashers import PBKDF2PasswordHasher
 from db_cinema_project.ui import auth_form, \
     main, first_form, reg_form, enter_form, \
     lk_form  # Это наш конвертированный файл дизайна
@@ -75,18 +76,31 @@ class EnterApp(QtWidgets.QMainWindow, enter_form.Ui_MainWindow):
 
     def enter(self):
         email = self.lineEdit.text()
+        password = self.lineEdit_2.text()
         email = email if email else None
-        self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
-                                 os.getenv('DB_PASSWORD'),
-                                 os.getenv('DB_DATABASE'))
-        res = self.db.check_for_email(email)
-        if not res[0]:
-            self.msg.setText("Данный пользователь не зарегистрирован.")
+        password = password if password else None
+        if not email:
+            self.msg.setText("Введите почту.")
+            self.msg.show()
+        elif not password:
+            self.msg.setText("Введите пароль.")
             self.msg.show()
         else:
-            self.close()
-            self.Open = LKApp(self.db, res[1])
-            self.Open.show()
+            self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
+                                     os.getenv('DB_PASSWORD'),
+                                     os.getenv('DB_DATABASE'))
+            res = self.db.check_for_email(email)
+            hasher = PBKDF2PasswordHasher()
+            if not res[0]:
+                self.msg.setText("Данный пользователь не зарегистрирован.")
+                self.msg.show()
+            elif not hasher.verify(password, res[1][1]):
+                self.msg.setText("Пароль неверный.")
+                self.msg.show()
+            else:
+                self.close()
+                self.Open = LKApp(self.db, res[1][0])
+                self.Open.show()
 
 
 class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
@@ -110,18 +124,25 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
         name = self.name.text()
         email = self.email.text()
         number = self.number.text()
+        password = self.password.text()
         name = name if name else None
         email = email if email else None
         number = number if number else None
+        password = password if password else None
         self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
                                  os.getenv('DB_PASSWORD'),
                                  os.getenv('DB_DATABASE'))
         try:
-            uid = self.db.add_user(name, email, number)
+            hasher = PBKDF2PasswordHasher()
+            hash = hasher.encode(password, hasher.salt())
+            uid = self.db.add_user(name, email, number, hash)
 
             self.close()
             self.Open = LKApp(self.db, uid)
             self.Open.show()
+        except AssertionError:
+            self.msg.setText("Введите пароль.")
+            self.msg.show()
         except pymysql.IntegrityError as error:
             code, message = error.args
             if code == 1048:

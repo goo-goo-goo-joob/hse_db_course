@@ -31,16 +31,16 @@ class DBCinema:
             c.execute(sql)
             return c.fetchall()
 
-    def add_user(self, name, email, number):
+    def add_user(self, name, email, number, hash):
         with self.conn.cursor() as c:
-            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта) VALUES( % s, % s, % s)'
-            c.execute(sql, (name, number, email))
+            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( % s, % s, % s, % s)'
+            c.execute(sql, (name, number, email, hash))
             self.conn.commit()
             return c.lastrowid
 
     def check_for_email(self, email):
         with self.conn.cursor() as c:
-            sql = "SELECT id FROM покупатель WHERE почта = %s"
+            sql = "SELECT id, хэш FROM покупатель WHERE почта = %s"
             c.execute(sql, email)
             return c.rowcount, c.fetchone()
 
