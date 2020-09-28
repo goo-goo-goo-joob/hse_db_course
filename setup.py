@@ -48,7 +48,7 @@ with open('README.md', 'rt') as f:
 
 setup(
     name=module_name,
-    version='0.1.2',
+    version='0.1.3',
     description='DB project for cinema',
     long_description=long_description,
     long_description_content_type='text/markdown',
