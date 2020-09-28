@@ -3,6 +3,10 @@ import os
 import pymysql
 
 
+class DBException(Exception):
+    pass
+
+
 class DBCinema:
     def __init__(self, host, user, password, database):
         self.conn = pymysql.connect(host=host,
@@ -11,38 +15,27 @@ class DBCinema:
                                     db=database,
                                     charset='utf8mb4',
                                     cursorclass=pymysql.cursors.Cursor)
-        # self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
-        # self.db.setHostName(host)
-        # self.db.setDatabaseName('labs')
-        # self.db.setUserName(user)
-        # self.db.setPassword(password)
-        # self.db.open()
 
     def close(self):
         self.conn.close()
 
     def get_all_stuff(self):
-        # self.query = QtSql.QSqlQuery(self.db)
-        # self.query.prepare("SELECT * FROM сотрудники")
-        # self.query.exec()
-        # return self.query.result()
         with self.conn.cursor() as c:
             sql = "SELECT * FROM сотрудники "
             c.execute(sql)
             return c.fetchall()
 
-    def add_user(self, name, email, number, hash):
+    def get_all_genre(self):
         with self.conn.cursor() as c:
-            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( % s, % s, % s, % s)'
-            c.execute(sql, (name, number, email, hash))
-            self.conn.commit()
-            return c.lastrowid
+            sql = """SELECT * FROM жанр ORDER BY id"""
+            c.execute(sql)
+            return c.fetchall(), c.description
 
-    def check_for_email(self, email):
+    def get_one_genre(self, id):
         with self.conn.cursor() as c:
-            sql = "SELECT id, хэш FROM покупатель WHERE почта = %s"
-            c.execute(sql, email)
-            return c.rowcount, c.fetchone()
+            sql = 'SELECT * FROM жанр WHERE id = %s'
+            c.execute(sql, (id,))
+            return c.fetchone()
 
     def get_user_name_by_id(self, uid):
         with self.conn.cursor() as c:
@@ -55,6 +48,61 @@ class DBCinema:
             sql = "SELECT фио, телефон FROM покупатель "
             c.execute(sql)
             return c.fetchall()
+
+    def add_user(self, name, email, number, hash):
+        with self.conn.cursor() as c:
+            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( %s, %s, %s, %s)'
+            c.execute(sql, (name, number, email, hash))
+            self.conn.commit()
+            return c.lastrowid
+
+    def add_genre(self, name):
+        try:
+            with self.conn.cursor() as c:
+                sql = 'INSERT INTO cinemadb.жанр (название) VALUES( %s)'
+                c.execute(sql, (name,))
+                self.conn.commit()
+        except pymysql.IntegrityError as e:
+            code, message = e.args
+            if code == 1062:
+                raise DBException("Указанное название жанра уже существует.", *e.args)
+            raise DBException("Не удалось добавить жанр.", *e.args)
+        except pymysql.DataError as e:
+            raise DBException("Слишком длинное название жанра.", *e.args)
+        except Exception as e:
+            raise DBException("Не удалось добавить жанр.", *e.args)
+
+    def update_genre(self, gid, name):
+        try:
+            with self.conn.cursor() as c:
+                sql = 'UPDATE жанр SET название = %s WHERE id = %s'
+                c.execute(sql, (name, gid,))
+                self.conn.commit()
+        except pymysql.IntegrityError as e:
+            code, message = e.args
+            if code == 1062:
+                raise DBException("Указанное название жанра уже существует.", *e.args)
+            raise DBException("Не удалось обновить жанр.", *e.args)
+        except pymysql.DataError as e:
+            raise DBException("Слишком длинное название жанра.", *e.args)
+        except Exception as e:
+            raise DBException("Не удалось обновить жанр.", *e.args)
+
+    def check_for_email(self, email):
+        with self.conn.cursor() as c:
+            sql = "SELECT id, хэш FROM покупатель WHERE почта = %s"
+            c.execute(sql, email)
+            return c.rowcount, c.fetchone()
+
+    def delete_one_genre(self, id):
+        try:
+            with self.conn.cursor() as c:
+                sql = 'DELETE FROM жанр WHERE id = %s'
+                c.execute(sql, (id,))
+                self.conn.commit()
+        except Exception as e:
+            raise DBException("Не удалось удалить жанр.", *e.args)
+
 
 
 if __name__ == '__main__':

@@ -31,8 +31,8 @@ class AuthApp(QtWidgets.QMainWindow, auth_form.Ui_MainWindow):
         login = self.login.text()
         password = self.password.text()
         try:
-            self.db = utils.DBCinema('localhost', os.getenv('DB_USER'),
-                                     os.getenv('DB_PASSWORD'),
+            self.db = utils.DBCinema('localhost', os.getenv('DB_USER', login),
+                                     os.getenv('DB_PASSWORD', password),
                                      'cinemadb')
             self.close()
             self.Open = MainApp(self.db)

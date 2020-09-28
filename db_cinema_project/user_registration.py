@@ -35,44 +35,49 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
         email = email if email else None
         number = number if number else None
         password = password if password else None
-        self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
-                                 os.getenv('DB_PASSWORD'),
-                                 os.getenv('DB_DATABASE'))
-        try:
-            hasher = PBKDF2PasswordHasher()
-            hash = hasher.encode(password, hasher.salt())
-            uid = self.db.add_user(name, email, number, hash)
-
-            self.close()
-            self.Open = LKApp(self.db, uid)
-            self.Open.show()
-        except AssertionError:
+        if not name:
+            self.msg.setText("Введите ФИО.")
+            self.msg.show()
+        elif not email:
+            self.msg.setText("Введите почту.")
+            self.msg.show()
+        elif not password:
             self.msg.setText("Введите пароль.")
             self.msg.show()
-        except pymysql.IntegrityError as error:
-            code, message = error.args
-            if code == 1048:
-                self.msg.setText("Заполните обязательные поля.")
-            elif code == 1062 and message[-6:] == 'почта\'':
-                self.msg.setText("Пользователь с указанной почтой уже существует.")
-            elif code == 1062 and message[-8:] == 'телефон\'':
-                self.msg.setText(
-                    "Пользователь с указанным номером телефона уже существует.")
-            else:
+        else:
+            self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
+                                     os.getenv('DB_PASSWORD'),
+                                     os.getenv('DB_DATABASE'))
+            try:
+                hasher = PBKDF2PasswordHasher()
+                hash = hasher.encode(password, hasher.salt())
+                uid = self.db.add_user(name, email, number, hash)
+
+                self.close()
+                self.Open = LKApp(self.db, uid)
+                self.Open.show()
+            except pymysql.IntegrityError as error:
+                code, message = error.args
+                if code == 1062 and message[-6:] == 'почта\'':
+                    self.msg.setText("Пользователь с указанной почтой уже существует.")
+                elif code == 1062 and message[-8:] == 'телефон\'':
+                    self.msg.setText(
+                        "Пользователь с указанным номером телефона уже существует.")
+                else:
+                    self.msg.setText("Не удалось зарегистрироваться.")
+                self.msg.show()
+            except pymysql.OperationalError as error:
+                _, message = error.args
+                self.msg.setText(message)
+                self.msg.show()
+            except pymysql.DataError as error:
+                _, message = error.args
+                if message[26:33] == 'телефон':
+                    self.msg.setText(
+                        "Слишком длинный номер телефона. Введите его в соответствии с форматом +7xxxxxxxxxx.")
+                else:
+                    self.msg.setText("Слишком длинные параметры ввода.")
+                self.msg.show()
+            except Exception:
                 self.msg.setText("Не удалось зарегистрироваться.")
-            self.msg.show()
-        except pymysql.OperationalError as error:
-            _, message = error.args
-            self.msg.setText(message)
-            self.msg.show()
-        except pymysql.DataError as error:
-            _, message = error.args
-            if message[26:33] == 'телефон':
-                self.msg.setText(
-                    "Слишком длинный номер телефона. Введите его в соответствии с форматом +7xxxxxxxxxx.")
-            else:
-                self.msg.setText("Слишком длинные параметры ввода.")
-            self.msg.show()
-        except Exception:
-            self.msg.setText("Не удалось зарегистрироваться.")
-            self.msg.show()
+                self.msg.show()
