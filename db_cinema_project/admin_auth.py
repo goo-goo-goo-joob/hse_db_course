@@ -37,5 +37,6 @@ class AuthApp(QtWidgets.QMainWindow, auth_form.Ui_MainWindow):
             self.close()
             self.Open = MainApp(self.db)
             self.Open.show()
-        except:  ## runtime_error???
+        # pylint: disable=W0703
+        except Exception:  # runtime_error???
             self.msg.show()

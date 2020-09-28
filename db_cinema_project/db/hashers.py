@@ -43,8 +43,7 @@ def force_bytes(s, encoding='utf-8', strings_only=False, errors='strict'):
     if isinstance(s, bytes):
         if encoding == 'utf-8':
             return s
-        else:
-            return s.decode('utf-8', errors).encode(encoding, errors)
+        return s.decode('utf-8', errors).encode(encoding, errors)
     if strings_only and is_protected_type(s):
         return s
     if isinstance(s, memoryview):
@@ -67,13 +66,13 @@ def pbkdf2(password, salt, iterations, dklen=0, digest=None):
     return hashlib.pbkdf2_hmac(digest().name, password, salt, iterations, dklen)
 
 
-def mask_hash(hash, show=6, char="*"):
+def mask_hash(hash_, show=6, char="*"):
     """
     Return the given hash, with only the first ``show`` number shown. The
     rest are masked with ``char`` for security reasons.
     """
-    masked = hash[:show]
-    masked += char * len(hash[show:])
+    masked = hash_[:show]
+    masked += char * len(hash_[show:])
     return masked
 
 
@@ -102,9 +101,9 @@ class PBKDF2PasswordHasher:
         assert password is not None
         assert salt and '$' not in salt
         iterations = iterations or self.iterations
-        hash = pbkdf2(password, salt, iterations, digest=self.digest)
-        hash = base64.b64encode(hash).decode('ascii').strip()
-        return "%s$%d$%s$%s" % (self.algorithm, iterations, salt, hash)
+        hash_ = pbkdf2(password, salt, iterations, digest=self.digest)
+        hash_ = base64.b64encode(hash_).decode('ascii').strip()
+        return "%s$%d$%s$%s" % (self.algorithm, iterations, salt, hash_)
 
     def decode(self, encoded):
         """
@@ -113,11 +112,11 @@ class PBKDF2PasswordHasher:
         `salt`. Extra keys can be algorithm specific like `iterations` or
         `work_factor`.
         """
-        algorithm, iterations, salt, hash = encoded.split('$', 3)
+        algorithm, iterations, salt, hash_ = encoded.split('$', 3)
         assert algorithm == self.algorithm
         return {
             'algorithm': algorithm,
-            'hash': hash,
+            'hash': hash_,
             'iterations': int(iterations),
             'salt': salt,
         }

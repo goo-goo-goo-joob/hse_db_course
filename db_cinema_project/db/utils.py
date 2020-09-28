@@ -31,10 +31,10 @@ class DBCinema:
             c.execute(sql)
             return c.fetchall(), c.description
 
-    def get_one_genre(self, id):
+    def get_one_genre(self, id_):
         with self.conn.cursor() as c:
             sql = 'SELECT * FROM жанр WHERE id = %s'
-            c.execute(sql, (id,))
+            c.execute(sql, (id_,))
             return c.fetchone()
 
     def get_user_name_by_id(self, uid):
@@ -49,10 +49,10 @@ class DBCinema:
             c.execute(sql)
             return c.fetchall()
 
-    def add_user(self, name, email, number, hash):
+    def add_user(self, name, email, number, hash_):
         with self.conn.cursor() as c:
             sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( %s, %s, %s, %s)'
-            c.execute(sql, (name, number, email, hash))
+            c.execute(sql, (name, number, email, hash_))
             self.conn.commit()
             return c.lastrowid
 
@@ -63,14 +63,14 @@ class DBCinema:
                 c.execute(sql, (name,))
                 self.conn.commit()
         except pymysql.IntegrityError as e:
-            code, message = e.args
+            code, *_ = e.args
             if code == 1062:
-                raise DBException("Указанное название жанра уже существует.", *e.args)
-            raise DBException("Не удалось добавить жанр.", *e.args)
+                raise DBException("Указанное название жанра уже существует.") from e
+            raise DBException("Не удалось добавить жанр.") from e
         except pymysql.DataError as e:
-            raise DBException("Слишком длинное название жанра.", *e.args)
+            raise DBException("Слишком длинное название жанра.") from e
         except Exception as e:
-            raise DBException("Не удалось добавить жанр.", *e.args)
+            raise DBException("Не удалось добавить жанр.") from e
 
     def update_genre(self, gid, name):
         try:
@@ -79,14 +79,14 @@ class DBCinema:
                 c.execute(sql, (name, gid,))
                 self.conn.commit()
         except pymysql.IntegrityError as e:
-            code, message = e.args
+            code, *_ = e.args
             if code == 1062:
-                raise DBException("Указанное название жанра уже существует.", *e.args)
-            raise DBException("Не удалось обновить жанр.", *e.args)
+                raise DBException("Указанное название жанра уже существует.") from e
+            raise DBException("Не удалось обновить жанр.") from e
         except pymysql.DataError as e:
-            raise DBException("Слишком длинное название жанра.", *e.args)
+            raise DBException("Слишком длинное название жанра.") from e
         except Exception as e:
-            raise DBException("Не удалось обновить жанр.", *e.args)
+            raise DBException("Не удалось обновить жанр.") from e
 
     def check_for_email(self, email):
         with self.conn.cursor() as c:
@@ -94,15 +94,14 @@ class DBCinema:
             c.execute(sql, email)
             return c.rowcount, c.fetchone()
 
-    def delete_one_genre(self, id):
+    def delete_one_genre(self, id_):
         try:
             with self.conn.cursor() as c:
                 sql = 'DELETE FROM жанр WHERE id = %s'
-                c.execute(sql, (id,))
+                c.execute(sql, (id_,))
                 self.conn.commit()
         except Exception as e:
-            raise DBException("Не удалось удалить жанр.", *e.args)
-
+            raise DBException("Не удалось удалить жанр.") from e
 
 
 if __name__ == '__main__':

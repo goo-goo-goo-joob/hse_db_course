@@ -50,8 +50,8 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
                                      os.getenv('DB_DATABASE'))
             try:
                 hasher = PBKDF2PasswordHasher()
-                hash = hasher.encode(password, hasher.salt())
-                uid = self.db.add_user(name, email, number, hash)
+                hash_ = hasher.encode(password, hasher.salt())
+                uid = self.db.add_user(name, email, number, hash_)
 
                 self.close()
                 self.Open = LKApp(self.db, uid)

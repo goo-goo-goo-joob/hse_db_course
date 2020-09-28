@@ -15,17 +15,17 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.open_genre_btn.clicked.connect(self.fopen_genre)
         self.db = db
 
-    def delete_genre(self, id):
+    def delete_genre(self, id_):
         try:
-            self.db.delete_one_genre(id)
+            self.db.delete_one_genre(id_)
             self.fopen_genre()
         except DBException as e:
             text, *_ = e.args
             self.msg.setText(text)
             self.msg.show()
 
-    def change_genre(self, id):
-        data = self.db.get_one_genre(id)
+    def change_genre(self, id_):
+        data = self.db.get_one_genre(id_)
         self.Open = AddGenreApp(self.db, data, on_close=self.fopen_genre)
         self.Open.show()
 
@@ -111,5 +111,4 @@ class AddFilmApp(QtWidgets.QMainWindow, add_film.Ui_MainWindow):
         self.pushButton.clicked.connect(self.submit)
 
     def submit(self):
-        print()
-        pass
+        print(self)
