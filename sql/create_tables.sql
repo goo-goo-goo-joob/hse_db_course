@@ -17,7 +17,8 @@ create table покупатель
     id      int primary key auto_increment,
     фио     varchar(100) not null,
     телефон varchar(12)  null unique,
-    почта   varchar(100) not null unique
+    почта   varchar(100) not null unique,
+    хэш     varchar(128) not null
 );
 
 create table типзала

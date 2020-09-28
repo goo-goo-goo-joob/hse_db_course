@@ -12,7 +12,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите существующую электронную почту.';
     END IF;
-    IF (NEW.телефон REGEXP '^\\+7[0-9]{10}$') = 0 THEN
+    IF (NEW.телефон REGEXP '^([+][7][0-9]{10})') = 0 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите существующий номер телефона соответствии с форматом +7xxxxxxxxxx.';
     END IF;
