@@ -49,6 +49,9 @@
       <property name="inputMethodHints">
        <set>Qt::ImhNone</set>
       </property>
+      <property name="placeholderText">
+       <string>example@example.com</string>
+      </property>
      </widget>
     </item>
     <item>
@@ -65,7 +68,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="number"/>
+     <widget class="QLineEdit" name="number">
+      <property name="placeholderText">
+       <string>+7xxxxxxxxxx</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_5">

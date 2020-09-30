@@ -16,10 +16,14 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
         self.msg.setWindowTitle("Ошибка регистрации")
-        self.msg.setStandardButtons(QtWidgets.QMessageBox.Cancel)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         self.pushButton.clicked.connect(self.register)
         self.db = None
         self.id = None
+        self.msg.buttonClicked.connect(self.ok)
+
+    def ok(self):
+        self.msg.close()
 
     def register(self):
         name = self.name.text()

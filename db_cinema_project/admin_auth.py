@@ -18,9 +18,12 @@ class AuthApp(QtWidgets.QMainWindow, auth_form.Ui_MainWindow):
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
         self.msg.setText("Не удалось подключиться.")
         self.msg.setWindowTitle("Ошибка подключения")
-        self.msg.setStandardButtons(QtWidgets.QMessageBox.Cancel)
-
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.msg.buttonClicked.connect(self.ok)
         self.db = None
+
+    def ok(self):
+        self.msg.close()
 
     def auth(self):
         login = self.login.text()

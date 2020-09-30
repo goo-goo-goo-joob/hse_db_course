@@ -5,9 +5,9 @@ from PyQt5 import QtWidgets
 
 class Table(QtWidgets.QWidget):
     def __init__(self, res, names=None, button_edit=None, button_edit_text=None,
-                 button_delete=None, button_delete_text=None):
+                 button_delete=None, button_delete_text=None, table_title='Таблица'):
         super().__init__()
-        self.title = 'Таблица'
+        self.title = table_title
         self.left = 0
         self.top = 0
         self.width = 1000

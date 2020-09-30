@@ -16,8 +16,7 @@ class EnterApp(QtWidgets.QMainWindow, enter_form.Ui_MainWindow):
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
         self.msg.setWindowTitle("Ошибка входа")
-        self.msg.setStandardButtons(
-            QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         self.msg.buttonClicked.connect(self.ok)
         self.pushButton.clicked.connect(self.enter)
         self.pushButton_2.clicked.connect(self.register)
