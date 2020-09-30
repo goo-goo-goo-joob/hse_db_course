@@ -67,7 +67,7 @@ create table фильм
 (
     id           int primary key auto_increment,
     название     varchar(100)  not null,
-    описание     varchar(500)  not null,
+    описание     varchar(1000)  not null,
     год          numeric(4, 0) not null,
     длительность time          not null,
     idрежиссер   int           not null,
