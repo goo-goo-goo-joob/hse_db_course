@@ -50,11 +50,32 @@ class DBCinema:
             return c.fetchall()
 
     def add_user(self, name, email, number, hash_):
-        with self.conn.cursor() as c:
-            sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( %s, %s, %s, %s)'
-            c.execute(sql, (name, number, email, hash_))
-            self.conn.commit()
-            return c.lastrowid
+        try:
+            with self.conn.cursor() as c:
+                sql = 'INSERT INTO cinemadb.покупатель (фио, телефон, почта, хэш) VALUES( %s, %s, %s, %s)'
+                c.execute(sql, (name, number, email, hash_))
+                self.conn.commit()
+                return c.lastrowid
+        except pymysql.IntegrityError as e:
+            code, message = e.args
+            if code == 1062 and message[-6:] == 'почта\'':
+                raise DBException(
+                    "Пользователь с указанной почтой уже существует.") from e
+            elif code == 1062 and message[-8:] == 'телефон\'':
+                raise DBException(
+                    "Пользователь с указанным номером телефона уже существует.") from e
+            raise DBException("Не удалось зарегистрироваться.") from e
+        except pymysql.OperationalError as e:
+            _, message = e.args
+            raise DBException(message) from e
+        except pymysql.DataError as e:
+            _, message = e.args
+            if message[26:33] == 'телефон':
+                raise DBException(
+                    "Слишком длинный номер телефона. Введите его в соответствии с форматом +7xxxxxxxxxx.") from e
+            raise DBException("Слишком длинные параметры ввода.") from e
+        except Exception as e:
+            raise DBException("Не удалось зарегистрироваться.") from e
 
     def add_genre(self, name):
         try:

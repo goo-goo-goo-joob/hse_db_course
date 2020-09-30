@@ -1,6 +1,12 @@
 DROP trigger IF EXISTS check_покупатель;
-DROP trigger IF EXISTS check_сеанс;
+DROP PROCEDURE IF EXISTS procedure_сеанс;
+DROP trigger IF EXISTS check_сеанс1;
+DROP trigger IF EXISTS check_сеанс2;
 DROP trigger IF EXISTS create_сеанс;
+DROP PROCEDURE IF EXISTS procedure_ограничение;
+DROP trigger IF EXISTS check_ограничение1;
+DROP trigger IF EXISTS check_ограничение2;
+
 
 DELIMITER $$
 CREATE TRIGGER check_покупатель
@@ -12,24 +18,102 @@ BEGIN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите существующую электронную почту.';
     END IF;
-    IF (NEW.телефон REGEXP '^([+][7][0-9]{10})') = 0 THEN
+    IF (NEW.телефон REGEXP '^[+][7][0-9]{10}') = 0 THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Введите существующий номер телефона соответствии с форматом +7xxxxxxxxxx.';
+            SET MESSAGE_TEXT =
+                    'Введите существующий номер телефона соответствии с форматом +7xxxxxxxxxx.';
     END IF;
 END;
 $$
 DELIMITER ;
 
 DELIMITER $$
-CREATE TRIGGER check_сеанс
+CREATE PROCEDURE procedure_ограничение(IN возраст VARCHAR(3))
+BEGIN
+    IF (возраст REGEXP '^[1-9]?[0-9][+]') = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Введите ограничение в соответствии с форматом x+.';
+    END IF;
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER check_ограничение1
+    BEFORE INSERT
+    ON возрастноеограничение
+    FOR EACH ROW
+BEGIN
+    CALL procedure_ограничение(NEW.возраст);
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER check_ограничение2
+    BEFORE UPDATE
+    ON возрастноеограничение
+    FOR EACH ROW
+BEGIN
+    CALL procedure_ограничение(NEW.возраст);
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE procedure_сеанс(IN idфильм_ int, датавремя_ time,
+                                 idзал_ int)
+BEGIN
+    DECLARE длительность_ time;
+    DECLARE свободно_ int unsigned;
+
+    SELECT фильм.длительность
+    INTO длительность_
+    FROM фильм
+    WHERE фильм.id = idфильм_;
+
+    IF (датавремя_ < NOW()) = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Дата и время сеанса меньше текщего времени.';
+    END IF;
+
+    SELECT COUNT(*)
+    INTO свободно_
+    FROM сеанс
+             LEFT JOIN фильм ф on сеанс.idфильм = ф.id
+    WHERE idзал_ = сеанс.idзал
+      AND ((датавремя_ > сеанс.датавремя AND
+            датавремя_ < сеанс.датавремя + ф.длительность) OR
+           (датавремя_ + длительность_ > сеанс.датавремя AND
+            датавремя_ + длительность_ < сеанс.датавремя + ф.длительность));
+
+    IF (свободно_ = 0) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                    'В указанном зале уже проходит сеанс на установленное время.';
+    END IF;
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER check_сеанс1
     BEFORE INSERT
     ON сеанс
     FOR EACH ROW
 BEGIN
-    IF (NEW.датавремя < NOW()) = 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Дата и время сеанса меньше текщего времени.';
-    END IF;
+    CALL procedure_сеанс(NEW.idфильм, NEW.датавремя, NEW.idзал);
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER check_сеанс2
+    BEFORE UPDATE
+    ON сеанс
+    FOR EACH ROW
+BEGIN
+    CALL procedure_сеанс(NEW.idфильм, NEW.датавремя, NEW.idзал);
 END;
 $$
 DELIMITER ;
@@ -101,6 +185,3 @@ BEGIN
 END;
 $$
 DELIMITER ;
-
-INSERT INTO cinemadb.покупатель (фио, телефон, почта)
-VALUES ('Самоделкина Мария Владимировна', '+78005553535', 'mvsamodelkina_4@edu.hse.ru')

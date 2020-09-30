@@ -35,14 +35,12 @@ class Table(QtWidgets.QWidget):
                                          QtWidgets.QTableWidgetItem(str(data)))
             if button_edit is not None:
                 btn_edit = QtWidgets.QPushButton(button_edit_text)
-                arg = row_data[0]
-                btn_edit.clicked.connect(partial(button_edit, arg))
+                btn_edit.clicked.connect(partial(button_edit, row_data[0]))
                 self.tableWidget.setCellWidget(row_number, len(row_data[1:]), btn_edit)
 
             if button_delete is not None:
                 btn_delete = QtWidgets.QPushButton(button_delete_text)
-                arg = row_data[0]
-                btn_delete.clicked.connect(partial(button_delete, arg))
+                btn_delete.clicked.connect(partial(button_delete, row_data[0]))
                 self.tableWidget.setCellWidget(row_number, len(row_data[1:]) + 1,
                                                btn_delete)
 

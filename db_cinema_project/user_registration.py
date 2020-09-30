@@ -1,10 +1,10 @@
 import os
 
-import pymysql
 from PyQt5 import QtWidgets
 
 from db_cinema_project.db import utils
 from db_cinema_project.db.hashers import PBKDF2PasswordHasher
+from db_cinema_project.db.utils import DBException
 from db_cinema_project.ui import reg_form
 from db_cinema_project.user_cabinet import LKApp
 
@@ -16,15 +16,10 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
         self.msg.setWindowTitle("Ошибка регистрации")
-        self.msg.setStandardButtons(
-            QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-        self.msg.buttonClicked.connect(self.ok)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Cancel)
         self.pushButton.clicked.connect(self.register)
         self.db = None
         self.id = None
-
-    def ok(self):
-        self.msg.close()
 
     def register(self):
         name = self.name.text()
@@ -56,28 +51,7 @@ class RegApp(QtWidgets.QMainWindow, reg_form.Ui_MainWindow):
                 self.close()
                 self.Open = LKApp(self.db, uid)
                 self.Open.show()
-            except pymysql.IntegrityError as error:
-                code, message = error.args
-                if code == 1062 and message[-6:] == 'почта\'':
-                    self.msg.setText("Пользователь с указанной почтой уже существует.")
-                elif code == 1062 and message[-8:] == 'телефон\'':
-                    self.msg.setText(
-                        "Пользователь с указанным номером телефона уже существует.")
-                else:
-                    self.msg.setText("Не удалось зарегистрироваться.")
-                self.msg.show()
-            except pymysql.OperationalError as error:
-                _, message = error.args
-                self.msg.setText(message)
-                self.msg.show()
-            except pymysql.DataError as error:
-                _, message = error.args
-                if message[26:33] == 'телефон':
-                    self.msg.setText(
-                        "Слишком длинный номер телефона. Введите его в соответствии с форматом +7xxxxxxxxxx.")
-                else:
-                    self.msg.setText("Слишком длинные параметры ввода.")
-                self.msg.show()
-            except Exception:
-                self.msg.setText("Не удалось зарегистрироваться.")
+            except DBException as e:
+                text, *_ = e.args
+                self.msg.setText(text)
                 self.msg.show()

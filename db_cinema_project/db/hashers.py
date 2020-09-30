@@ -66,16 +66,6 @@ def pbkdf2(password, salt, iterations, dklen=0, digest=None):
     return hashlib.pbkdf2_hmac(digest().name, password, salt, iterations, dklen)
 
 
-def mask_hash(hash_, show=6, char="*"):
-    """
-    Return the given hash, with only the first ``show`` number shown. The
-    rest are masked with ``char`` for security reasons.
-    """
-    masked = hash_[:show]
-    masked += char * len(hash_[show:])
-    return masked
-
-
 class PBKDF2PasswordHasher:
     """
     Secure password hashing using the PBKDF2 algorithm (recommended)

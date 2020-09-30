@@ -60,7 +60,7 @@ create table режиссер
 create table возрастноеограничение
 (
     id      int primary key auto_increment,
-    возраст numeric(2, 0) not null unique
+    возраст varchar(3) not null unique
 );
 
 create table фильм
