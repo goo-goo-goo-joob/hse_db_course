@@ -57,7 +57,32 @@ class DBCinema:
 
     def get_all_hall(self):
         with self.conn.cursor() as c:
-            sql = """SELECT зал.id, зал.название as `название`, длинаряда, числорядов, к.адрес as `адрескинотеатра`, т.название as `тип зала` FROM зал JOIN кинотеатр к on к.id = зал.idкинотеатр JOIN типзала т on т.id = зал.idтипзала ORDER BY к.адрес, название"""
+            sql = """SELECT зал.id,
+       зал.название as `название`,
+       длинаряда,
+       числорядов,
+       к.адрес      as `адрескинотеатра`,
+       т.название   as `тип зала`
+FROM зал
+         JOIN кинотеатр к on к.id = зал.idкинотеатр
+         JOIN типзала т on т.id = зал.idтипзала
+ORDER BY к.адрес, название"""
+            c.execute(sql)
+            return c.fetchall(), c.description
+
+    def get_all_film(self):
+        with self.conn.cursor() as c:
+            sql = """SELECT фильм.id,
+       название,
+       описание,
+       год,
+       длительность,
+       возраст,
+       фио
+FROM фильм
+         JOIN возрастноеограничение в on в.id = фильм.idвозраст
+         JOIN режиссер р on р.id = фильм.idрежиссер
+ORDER BY название, год, р.фио"""
             c.execute(sql)
             return c.fetchall(), c.description
 
@@ -103,6 +128,18 @@ class DBCinema:
             c.execute(sql, (id_,))
             return c.fetchone()
 
+    def get_one_film(self, id_):
+        with self.conn.cursor() as c:
+            sql = 'SELECT * FROM фильм WHERE id = %s'
+            c.execute(sql, (id_,))
+            return c.fetchone()
+
+    def get_id_genre(self, name):
+        with self.conn.cursor() as c:
+            sql = 'SELECT id FROM жанр WHERE название = %s'
+            c.execute(sql, (name,))
+            return c.fetchone()[0]
+
     def get_id_typehall(self, name):
         with self.conn.cursor() as c:
             sql = 'SELECT id FROM типзала WHERE название = %s'
@@ -114,6 +151,30 @@ class DBCinema:
             sql = 'SELECT id FROM кинотеатр WHERE адрес = %s'
             c.execute(sql, (address,))
             return c.fetchone()[0]
+
+    def get_id_producer(self, name):
+        with self.conn.cursor() as c:
+            sql = 'SELECT id FROM режиссер WHERE фио = %s'
+            c.execute(sql, (name,))
+            return c.fetchone()[0]
+
+    def get_id_restrict(self, age):
+        with self.conn.cursor() as c:
+            sql = 'SELECT id FROM возрастноеограничение WHERE возраст = %s'
+            c.execute(sql, (age,))
+            return c.fetchone()[0]
+
+    def get_film_genre(self, idfilm):
+        with self.conn.cursor() as c:
+            sql = 'SELECT ж.id FROM жанрыфильмов JOIN жанр ж on ж.id = жанрыфильмов.idжанр WHERE idфильм = %s'
+            c.execute(sql, (idfilm,))
+            return c.fetchall()
+
+    def get_film_typehall(self, idfilm):
+        with self.conn.cursor() as c:
+            sql = 'SELECT т.id FROM форматыфильмов JOIN типзала т on т.id = форматыфильмов.idтипзала WHERE idфильм = %s'
+            c.execute(sql, (idfilm,))
+            return c.fetchall()
 
     def get_user_name_by_id(self, uid):
         with self.conn.cursor() as c:
@@ -266,7 +327,8 @@ class DBCinema:
     def add_hall(self, name, length, number, typehall, cinema):
         try:
             with self.conn.cursor() as c:
-                sql = 'INSERT INTO зал (название, длинаряда, числорядов, idтипзала, idкинотеатр) VALUES(%s, %s, %s, %s, %s)'
+                sql = '''INSERT INTO зал (название, длинаряда, числорядов, idтипзала, idкинотеатр)
+VALUES (%s, %s, %s, %s, %s)'''
                 c.execute(sql, (name, length, number, typehall, cinema,))
                 self.conn.commit()
         except pymysql.IntegrityError as e:
@@ -281,6 +343,34 @@ class DBCinema:
             raise DBException(message) from e
         except Exception as e:
             raise DBException("Не удалось добавить зал.") from e
+
+    def add_film(self, name, descript, year, duration,
+                 idgenre, idproducer, idrestrict, idtypehall):
+        try:
+            with self.conn.cursor() as c:
+                sql = '''INSERT INTO фильм (название, описание, год, длительность, idрежиссер, idвозраст)
+VALUES (%s, %s, %s, %s, %s, %s)'''
+                c.execute(sql, (name, descript, year, duration, idproducer, idrestrict))
+                idf = c.lastrowid
+                for idg in idgenre:
+                    sql = '''INSERT INTO жанрыфильмов (idфильм, idжанр) VALUES (%s, %s)'''
+                    c.execute(sql, (idf, idg))
+                for idt in idtypehall:
+                    sql = '''INSERT INTO форматыфильмов (idфильм, idтипзала) VALUES (%s, %s)'''
+                    c.execute(sql, (idf, idt))
+                self.conn.commit()
+        except pymysql.IntegrityError as e:
+            code, *_ = e.args
+            if code == 1062:
+                raise DBException("Фильм с заданным названием, годом и режиссером уже существует.") from e
+            raise DBException("Не удалось добавить фильм.") from e
+        except pymysql.DataError as e:
+            raise DBException("Слишком длинное название или описание фильма.") from e
+        except pymysql.OperationalError as e:
+            _, message = e.args
+            raise DBException(message) from e
+        except Exception as e:
+            raise DBException("Не удалось добавить фильм.") from e
 
     def update_genre(self, gid, name):
         try:
@@ -410,6 +500,37 @@ class DBCinema:
         except Exception as e:
             raise DBException("Не удалось обновить зал.") from e
 
+    def update_film(self, gid, name, descript, year, duration,
+                 idgenre, idproducer, idrestrict, idtypehall):
+        try:
+            with self.conn.cursor() as c:
+                sql = '''UPDATE фильм SET название = %s, описание = %s, год = %s, длительность = %s, idрежиссер = %s, idвозраст = %s
+WHERE id = %s'''
+                c.execute(sql, (name, descript, year, duration, idproducer, idrestrict, gid))
+                sql = 'DELETE FROM жанрыфильмов WHERE idфильм = %s'
+                c.execute(sql, (gid, ))
+                for idg in idgenre:
+                    sql = '''INSERT INTO жанрыфильмов (idфильм, idжанр) VALUES (%s, %s)'''
+                    c.execute(sql, (gid, idg))
+                sql = 'DELETE FROM форматыфильмов WHERE idфильм = %s'
+                c.execute(sql, (gid, ))
+                for idt in idtypehall:
+                    sql = '''INSERT INTO форматыфильмов (idфильм, idтипзала) VALUES (%s, %s)'''
+                    c.execute(sql, (gid, idt))
+                self.conn.commit()
+        except pymysql.IntegrityError as e:
+            code, *_ = e.args
+            if code == 1062:
+                raise DBException("Фильм с заданным названием, годом и режиссером уже существует.") from e
+            raise DBException("Не удалось добавить фильм.") from e
+        except pymysql.DataError as e:
+            raise DBException("Слишком длинное название или описание фильма.") from e
+        except pymysql.OperationalError as e:
+            _, message = e.args
+            raise DBException(message) from e
+        except Exception as e:
+            raise DBException("Не удалось добавить фильм.") from e
+
     def check_for_email(self, email):
         with self.conn.cursor() as c:
             sql = "SELECT id, хэш FROM покупатель WHERE почта = %s"
@@ -478,6 +599,19 @@ class DBCinema:
                 self.conn.commit()
         except Exception as e:
             raise DBException("Не удалось удалить зал.") from e
+
+    def delete_one_film(self, id_):
+        try:
+            with self.conn.cursor() as c:
+                sql = 'DELETE FROM жанрыфильмов WHERE idфильм = %s'
+                c.execute(sql, (id_, ))
+                sql = 'DELETE FROM форматыфильмов WHERE idфильм = %s'
+                c.execute(sql, (id_, ))
+                sql = 'DELETE FROM фильм WHERE id = %s'
+                c.execute(sql, (id_,))
+                self.conn.commit()
+        except Exception as e:
+            raise DBException("Не удалось удалить фильм.") from e
 
 
 if __name__ == '__main__':

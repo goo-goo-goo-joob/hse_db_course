@@ -20,6 +20,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.add_typehall_btn.clicked.connect(self.fadd_typehall)
         self.add_hall_btn.clicked.connect(self.fadd_hall)
 
+        self.open_film_btn.clicked.connect(self.fopen_film)
         self.open_genre_btn.clicked.connect(self.fopen_genre)
         self.open_producer_btn.clicked.connect(self.fopen_producer)
         self.open_restrict_btn.clicked.connect(self.fopen_restrict)
@@ -28,6 +29,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.open_typehall_btn.clicked.connect(self.fopen_typehall)
         self.open_hall_btn.clicked.connect(self.fopen_hall)
         self.db = db
+        self.table_film = None
         self.table_genre = None
         self.table_producer = None
         self.table_restrict = None
@@ -53,6 +55,15 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
 
     def ok(self):
         self.msg.close()
+
+    def delete_film(self, id_):
+        try:
+            self.db.delete_one_film(id_)
+            self.fopen_film()
+        except DBException as e:
+            text, *_ = e.args
+            self.msg.setText(text)
+            self.msg.show()
 
     def delete_genre(self, id_):
         try:
@@ -117,6 +128,11 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
             self.msg.setText(text)
             self.msg.show()
 
+    def change_film(self, id_):
+        data = self.db.get_one_film(id_)
+        self.OpenFilm = AddFilmApp(self.db, data, on_close=self.fopen_film)
+        self.OpenFilm.show()
+
     def change_genre(self, id_):
         data = self.db.get_one_genre(id_)
         self.OpenGenre = AddGenreApp(self.db, data, on_close=self.fopen_genre)
@@ -151,6 +167,19 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         data = self.db.get_one_hall(id_)
         self.OpenHall = AddHallApp(self.db, data, on_close=self.fopen_hall)
         self.OpenHall.show()
+
+    def fopen_film(self):
+        res, names = self.db.get_all_film()
+        if res:
+            self.table_film = Table(res, names, self.change_film, "Обновить",
+                                     self.delete_film,
+                                     "Удалить", "Таблица фильмов")
+            self.table_film.show()
+        else:
+            if self.table_film:
+                self.table_film.close()
+            self.msg.setText("Нет фильмов для просмотра.")
+            self.msg.show()
 
     def fopen_genre(self):
         res, names = self.db.get_all_genre()
@@ -243,6 +272,10 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
             self.msg.setText("Нет залов для просмотра.")
             self.msg.show()
 
+    def fadd_film(self):
+        self.OpenFilm = AddFilmApp(self.db, on_close=self.fopen_film)
+        self.OpenFilm.show()
+
     def fadd_genre(self):
         self.OpenGenre = AddGenreApp(self.db, on_close=self.fopen_genre)
         self.OpenGenre.show()
@@ -270,10 +303,6 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
     def fadd_hall(self):
         self.OpenHall = AddHallApp(self.db, on_close=self.fopen_hall)
         self.OpenHall.show()
-
-    def fadd_film(self):
-        self.OpenFilm = AddFilmApp(self.db)
-        self.OpenFilm.show()
 
     def print_db(self):
         res = self.db.get_all_stuff()
@@ -697,20 +726,124 @@ class AddHallApp(QtWidgets.QMainWindow, hall.Ui_MainWindow):
 
 
 class AddFilmApp(QtWidgets.QMainWindow, add_film.Ui_MainWindow):
-    def __init__(self, db):
+    def __init__(self, db, data=None, *, on_close=None):
         super().__init__()
         self.setupUi(self)
+        self.pushButton.clicked.connect(self.add_film_db)
         self.db = db
+        self.data = data
+        self.on_close = on_close
 
-        genres, _ = self.db.get_all_genre()
-        genres_text = []
-        genres_data = []
-        for g in genres:
-            genres_data.append(g[0])
-            genres_text.append(g[1])
-        self.comboBox.addItems(genres_text, genres_data)
+        allgenre = self.db.get_all_genre()[0]
+        allproducer = self.db.get_all_producer()[0]
+        allrestrict = self.db.get_all_restrict()[0]
+        alltypehall = self.db.get_all_typehall()[0]
+        genre_text = []
+        genre_data = []
+        producer_text = []
+        restrict_text = []
+        typehall_text = []
+        typehall_data = []
+        for t in allgenre:
+            genre_text.append(t[1])
+            genre_data.append(t[0])
+        for t in allproducer:
+            producer_text.append(t[1])
+        for t in allrestrict:
+            restrict_text.append(t[1])
+        for t in alltypehall:
+            typehall_text.append(t[1])
+            typehall_data.append(t[0])
+        self.genre.clear()
+        self.genre.addItems(genre_text, genre_data)
+        self.producer.clear()
+        self.producer.addItems(producer_text)
+        self.restrict.clear()
+        self.restrict.addItems(restrict_text)
+        self.typehall.clear()
+        self.typehall.addItems(typehall_text, typehall_data)
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setIcon(QtWidgets.QMessageBox.Information)
+        self.msg.setWindowTitle("Ошибка добавления фильма")
+        if data:
+            self.name.setText(data[1])
+            self.descript.setPlainText(data[2])
+            self.year.setValue(data[3])
+            self.duration.setTime(
+                QtCore.QTime(data[4].seconds // 3600, data[4].seconds % 3600 // 60, 0))
+            self.producer.setCurrentText(self.db.get_one_producer(data[5])[1])
+            self.restrict.setCurrentText(self.db.get_one_restrict(data[6])[1])
+            self.genre.setTexts(self.db.get_film_genre(data[0]))
+            self.typehall.setTexts(self.db.get_film_typehall(data[0]))
+            self.pushButton.setText("Изменить фильм")
+            self.msg.setWindowTitle("Ошибка изменения фильма")
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.msg.buttonClicked.connect(self.ok)
 
-        self.pushButton.clicked.connect(self.submit)
+    def ok(self):
+        self.msg.close()
 
-    def submit(self):
-        print(self)
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        if self.on_close:
+            self.on_close()
+
+    def add_film_db(self):
+        name = self.name.text()
+        descript = self.descript.toPlainText()
+        year = self.year.text()
+        duration = self.duration.text()
+        genre = self.genre.currentData()
+        producer = self.producer.currentText()
+        restrict = self.restrict.currentText()
+        typehall = self.typehall.currentData()
+        name = name.lower() if name else None
+        descript = descript.lower() if descript else None
+        year = year if year else None
+        duration = duration if duration != '0:00' else None
+        genre = genre if genre else None
+        producer = producer if producer else None
+        restrict = restrict if restrict else None
+        typehall = typehall if typehall else None
+        if not name:
+            self.msg.setText("Введите название фильма.")
+            self.msg.show()
+        elif not descript:
+            self.msg.setText("Введите описание фильма.")
+            self.msg.show()
+        elif not year:
+            self.msg.setText("Введите год фильма.")
+            self.msg.show()
+        elif not duration:
+            self.msg.setText("Введите продолжительность фильма.")
+            self.msg.show()
+        elif not genre:
+            self.msg.setText("Выберите жанры.")
+            self.msg.show()
+        elif not producer:
+            self.msg.setText("Выберите режиссера.")
+            self.msg.show()
+        elif not restrict:
+            self.msg.setText("Выберите ограничение.")
+            self.msg.show()
+        elif not typehall:
+            self.msg.setText("Выберите типы залов.")
+            self.msg.show()
+        else:
+            try:
+                if self.data:
+                    self.db.update_film(self.data[0], name, descript, year, duration,
+                                        genre, self.db.get_id_producer(producer),
+                                        self.db.get_id_restrict(restrict), typehall)
+                    self.msg.setWindowTitle("Сообщение об изменении")
+                    self.msg.setText("Фильм успешно изменен.")
+                else:
+                    self.db.add_film(name, descript, year, duration,
+                                     genre, self.db.get_id_producer(producer),
+                                     self.db.get_id_restrict(restrict), typehall)
+                    self.msg.setWindowTitle("Сообщение о добавлении")
+                    self.msg.setText("Фильм успешно добавлен.")
+                self.msg.show()
+            except DBException as e:
+                text, *_ = e.args
+                self.msg.setText(text)
+                self.msg.show()

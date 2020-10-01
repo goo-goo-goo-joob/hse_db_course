@@ -48,7 +48,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="lineEdit"/>
+     <widget class="QLineEdit" name="name"/>
     </item>
     <item>
      <widget class="QLabel" name="label_7">
@@ -64,7 +64,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QPlainTextEdit" name="plainTextEdit"/>
+     <widget class="QPlainTextEdit" name="descript"/>
     </item>
     <item>
      <widget class="QLabel" name="label_9">
@@ -80,7 +80,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="spinBox">
+     <widget class="QSpinBox" name="year">
       <property name="minimum">
        <number>1900</number>
       </property>
@@ -109,7 +109,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTimeEdit" name="timeEdit"/>
+     <widget class="QTimeEdit" name="duration"/>
     </item>
     <item>
      <widget class="QLabel" name="label_3">
@@ -125,7 +125,7 @@
      </widget>
     </item>
     <item>
-     <widget class="CheckableComboBox" name="comboBox"/>
+     <widget class="CheckableComboBox" name="genre"/>
     </item>
     <item>
      <widget class="QLabel" name="label_4">
@@ -141,7 +141,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="comboBox_2"/>
+     <widget class="QComboBox" name="producer"/>
     </item>
     <item>
      <widget class="QLabel" name="label_5">
@@ -157,7 +157,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="comboBox_3"/>
+     <widget class="QComboBox" name="restrict"/>
     </item>
     <item>
      <widget class="QLabel" name="label_6">
@@ -173,7 +173,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="comboBox_4"/>
+     <widget class="CheckableComboBox" name="typehall"/>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton">
