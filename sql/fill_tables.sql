@@ -194,3 +194,9 @@ insert into cinemadb.жанрыфильмов (idфильм, idжанр) values
 (17, 27),
 (18, 19);
 
+insert into cinemadb.сеанс (датавремя, idзал, idфильм) values
+('2020-10-10 14:00', 10, 17);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм) values
+('2020-10-10 14:00', 9, 17);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм) values
+('2020-10-10 14:00', 8, 17);

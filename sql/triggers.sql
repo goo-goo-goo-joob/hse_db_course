@@ -127,9 +127,9 @@ BEGIN
     FROM фильм
     WHERE фильм.id = idфильм_;
 
-    IF (датавремя_ < NOW()) = 0 THEN
+    IF (датавремя_ < NOW()) THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Дата и время сеанса меньше текщего времени.';
+            SET MESSAGE_TEXT = 'Дата и время сеанса меньше текущего времени.';
     END IF;
 
     SELECT COUNT(*)
@@ -176,7 +176,7 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE TRIGGER create_сеанс
-    AFTER INSERT
+    BEFORE INSERT
     ON сеанс
     FOR EACH ROW
 BEGIN
@@ -210,11 +210,9 @@ BEGIN
         WHERE зал.id = NEW.idзал);
 
     SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
-
-    UPDATE сеанс
-    SET цена        = @цена,
-        idтипсеанса = @типсеанса
-    WHERE id = NEW.id;
+    
+    SET new.цена = @цена;
+    SET new.idтипсеанса = типсеанса_;
 
     SET @ряд = 1, @место = 1;
 
@@ -232,8 +230,8 @@ BEGIN
         do
             while @место <= макс_место_
                 do
-                    INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
-                    VALUES (@место, @ряд, NEW.id);
+                    #INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
+                    #VALUES (@место, @ряд, NEW.id);
                     set @место = @место + 1;
                 end while;
             set @ряд = @ряд + 1;
