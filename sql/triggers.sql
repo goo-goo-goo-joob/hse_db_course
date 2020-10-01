@@ -2,7 +2,8 @@ DROP trigger IF EXISTS check_покупатель;
 DROP PROCEDURE IF EXISTS procedure_сеанс;
 DROP trigger IF EXISTS check_сеанс1;
 DROP trigger IF EXISTS check_сеанс2;
-DROP trigger IF EXISTS create_сеанс;
+DROP trigger IF EXISTS create_сеанс1;
+DROP trigger IF EXISTS create_сеанс2;
 DROP PROCEDURE IF EXISTS procedure_ограничение;
 DROP trigger IF EXISTS check_ограничение1;
 DROP trigger IF EXISTS check_ограничение2;
@@ -116,7 +117,7 @@ DELIMITER ;
 
 
 DELIMITER $$
-CREATE PROCEDURE procedure_сеанс(IN idфильм_ int, датавремя_ time,
+CREATE PROCEDURE procedure_сеанс(IN idфильм_ int, датавремя_ datetime,
                                  idзал_ int, id_ int)
 BEGIN
     DECLARE длительность_ time;
@@ -175,7 +176,7 @@ $$
 DELIMITER ;
 
 DELIMITER $$
-CREATE TRIGGER create_сеанс
+CREATE TRIGGER create_сеанс1
     BEFORE INSERT
     ON сеанс
     FOR EACH ROW
@@ -184,8 +185,6 @@ BEGIN
     DECLARE надбавкасеанса_ int unsigned;
     DECLARE надбавказала_ int unsigned;
     DECLARE базоваяцена_ int unsigned;
-    DECLARE макс_ряд_ int unsigned;
-    DECLARE макс_место_ int unsigned;
 
     SELECT типсеанса.id, типсеанса.надбавкасеанса
     INTO типсеанса_, надбавкасеанса_
@@ -210,9 +209,21 @@ BEGIN
         WHERE зал.id = NEW.idзал);
 
     SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
-    
+
     SET new.цена = @цена;
     SET new.idтипсеанса = типсеанса_;
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER create_сеанс2
+    AFTER INSERT
+    ON сеанс
+    FOR EACH ROW
+BEGIN
+    DECLARE макс_ряд_ int unsigned;
+    DECLARE макс_место_ int unsigned;
 
     SET @ряд = 1, @место = 1;
 
@@ -230,12 +241,14 @@ BEGIN
         do
             while @место <= макс_место_
                 do
-                    #INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
-                    #VALUES (@место, @ряд, NEW.id);
+                    INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
+                    VALUES (@место, @ряд, NEW.id);
                     set @место = @место + 1;
                 end while;
+            set @место = 1;
             set @ряд = @ряд + 1;
         end while;
 END;
 $$
 DELIMITER ;
+
