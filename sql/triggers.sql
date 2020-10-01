@@ -4,6 +4,7 @@ DROP trigger IF EXISTS check_сеанс1;
 DROP trigger IF EXISTS check_сеанс2;
 DROP trigger IF EXISTS create_сеанс1;
 DROP trigger IF EXISTS create_сеанс2;
+DROP trigger IF EXISTS update_сеанс;
 DROP PROCEDURE IF EXISTS procedure_ограничение;
 DROP trigger IF EXISTS check_ограничение1;
 DROP trigger IF EXISTS check_ограничение2;
@@ -185,6 +186,8 @@ BEGIN
     DECLARE надбавкасеанса_ int unsigned;
     DECLARE надбавказала_ int unsigned;
     DECLARE базоваяцена_ int unsigned;
+    DECLARE макс_ряд_ int unsigned;
+    DECLARE макс_место_ int unsigned;
 
     SELECT типсеанса.id, типсеанса.надбавкасеанса
     INTO типсеанса_, надбавкасеанса_
@@ -210,23 +213,6 @@ BEGIN
 
     SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
 
-    SET new.цена = @цена;
-    SET new.idтипсеанса = типсеанса_;
-END;
-$$
-DELIMITER ;
-
-DELIMITER $$
-CREATE TRIGGER create_сеанс2
-    AFTER INSERT
-    ON сеанс
-    FOR EACH ROW
-BEGIN
-    DECLARE макс_ряд_ int unsigned;
-    DECLARE макс_место_ int unsigned;
-
-    SET @ряд = 1, @место = 1;
-
     SELECT числорядов
     INTO макс_ряд_
     FROM зал
@@ -237,9 +223,28 @@ BEGIN
     FROM зал
     WHERE зал.id = NEW.idзал;
 
-    while @ряд <= макс_ряд_
+    SET new.цена = @цена;
+    SET new.idтипсеанса = типсеанса_;
+    SET new.длинаряда = макс_место_;
+    SET new.числорядов = макс_ряд_;
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER create_сеанс2
+    AFTER INSERT
+    ON сеанс
+    FOR EACH ROW
+BEGIN
+    SET @ряд = 1, @место = 1;
+
+    SET @макс_ряд_ = NEW.числорядов;
+    SET @макс_место_ = NEW.длинаряда;
+
+    while @ряд <= @макс_ряд_
         do
-            while @место <= макс_место_
+            while @место <= @макс_место_
                 do
                     INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
                     VALUES (@место, @ряд, NEW.id);
@@ -252,3 +257,76 @@ END;
 $$
 DELIMITER ;
 
+DELIMITER $$
+CREATE TRIGGER update_сеанс
+    BEFORE UPDATE
+    ON сеанс
+    FOR EACH ROW
+BEGIN
+    DECLARE типсеанса_ int unsigned;
+    DECLARE надбавкасеанса_ int unsigned;
+    DECLARE надбавказала_ int unsigned;
+    DECLARE базоваяцена_ int unsigned;
+    DECLARE макс_ряд_ int unsigned;
+    DECLARE макс_место_ int unsigned;
+
+    SELECT типсеанса.id, типсеанса.надбавкасеанса
+    INTO типсеанса_, надбавкасеанса_
+    FROM типсеанса
+    WHERE типсеанса.времяначала <= TIME(NEW.датавремя)
+      and типсеанса.времяконца >= TIME(NEW.датавремя);
+
+    SELECT типзала.надбавказала
+    INTO надбавказала_
+    FROM типзала
+    WHERE типзала.id = (
+        SELECT зал.idтипзала
+        FROM зал
+        WHERE зал.id = NEW.idзал);
+
+    SELECT кинотеатр.базоваяцена
+    INTO базоваяцена_
+    FROM кинотеатр
+    WHERE кинотеатр.id = (
+        SELECT зал.idкинотеатр
+        FROM зал
+        WHERE зал.id = NEW.idзал);
+
+    SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
+
+    SELECT числорядов
+    INTO макс_ряд_
+    FROM зал
+    WHERE зал.id = NEW.idзал;
+
+    SELECT длинаряда
+    INTO макс_место_
+    FROM зал
+    WHERE зал.id = NEW.idзал;
+
+    SET new.цена = @цена;
+    SET new.idтипсеанса = типсеанса_;
+    SET new.длинаряда = макс_место_;
+    SET new.числорядов = макс_ряд_;
+
+    DELETE from билетнаместо WHERE idсеанс = new.id;
+
+    SET @ряд = 1, @место = 1;
+
+    SET @макс_ряд_ = NEW.числорядов;
+    SET @макс_место_ = NEW.длинаряда;
+
+    while @ряд <= @макс_ряд_
+        do
+            while @место <= @макс_место_
+                do
+                    INSERT INTO билетнаместо (номерместа, номерряда, idсеанс)
+                    VALUES (@место, @ряд, NEW.id);
+                    set @место = @место + 1;
+                end while;
+            set @место = 1;
+            set @ряд = @ряд + 1;
+        end while;
+END;
+$$
+DELIMITER ;

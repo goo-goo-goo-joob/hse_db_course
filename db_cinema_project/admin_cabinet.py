@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from db_cinema_project.db.utils import DBException
 from db_cinema_project.ui import main, add_film, genre, producer, restrict, typesess, \
-    cinema, typehall, hall
+    cinema, typehall, hall, session1, session2
 from db_cinema_project.utils.table import Table
 
 
@@ -19,6 +19,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.add_cinema_btn.clicked.connect(self.fadd_cinema)
         self.add_typehall_btn.clicked.connect(self.fadd_typehall)
         self.add_hall_btn.clicked.connect(self.fadd_hall)
+        self.add_session_btn.clicked.connect(self.fadd_session)
 
         self.open_film_btn.clicked.connect(self.fopen_film)
         self.open_genre_btn.clicked.connect(self.fopen_genre)
@@ -28,6 +29,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.open_cinema_btn.clicked.connect(self.fopen_cinema)
         self.open_typehall_btn.clicked.connect(self.fopen_typehall)
         self.open_hall_btn.clicked.connect(self.fopen_hall)
+        self.open_session_btn.clicked.connect(self.fopen_session)
         self.db = db
         self.table_film = None
         self.table_genre = None
@@ -37,6 +39,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.table_cinema = None
         self.table_typehall = None
         self.table_hall = None
+        self.table_filmsess = None
         self.OpenGenre = None
         self.OpenProducer = None
         self.OpenRestrict = None
@@ -45,6 +48,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.OpenCinema = None
         self.OpenTypehall = None
         self.OpenHall = None
+        self.OpenSession = None
 
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
@@ -128,6 +132,19 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
             self.msg.setText(text)
             self.msg.show()
 
+    def delete_session(self, id_):
+        if self.db.number_bue_session(id_) > 0:
+            self.msg.setText("Сеанс не может быть удален. На него уже куплены билеты.")
+            self.msg.show()
+        else:
+            try:
+                self.db.delete_one_session(id_)
+                self.fopen_session()
+            except DBException as e:
+                text, *_ = e.args
+                self.msg.setText(text)
+                self.msg.show()
+
     def change_film(self, id_):
         data = self.db.get_one_film(id_)
         self.OpenFilm = AddFilmApp(self.db, data, on_close=self.fopen_film)
@@ -168,12 +185,17 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.OpenHall = AddHallApp(self.db, data, on_close=self.fopen_hall)
         self.OpenHall.show()
 
+    def change_session(self, id_):
+        data = self.db.get_one_session(id_)
+        self.OpenSession = AddSessionApp(self.db, data=data, film=data[-1], on_close=self.fopen_session)
+        self.OpenSession.show()
+
     def fopen_film(self):
         res, names = self.db.get_all_film()
         if res:
             self.table_film = Table(res, names, self.change_film, "Обновить",
-                                     self.delete_film,
-                                     "Удалить", "Таблица фильмов")
+                                    self.delete_film,
+                                    "Удалить", "Таблица фильмов")
             self.table_film.show()
         else:
             if self.table_film:
@@ -272,6 +294,19 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
             self.msg.setText("Нет залов для просмотра.")
             self.msg.show()
 
+    def fopen_session(self):
+        res, names = self.db.get_all_session()
+        if res:
+            self.table_session = Table(res, names, self.change_session, "Обновить",
+                                    self.delete_session, "Удалить",
+                                    "Таблица сеансов")
+            self.table_session.show()
+        else:
+            if self.table_session:
+                self.table_session.close()
+            self.msg.setText("Нет сеансов для просмотра.")
+            self.msg.show()
+
     def fadd_film(self):
         self.OpenFilm = AddFilmApp(self.db, on_close=self.fopen_film)
         self.OpenFilm.show()
@@ -303,6 +338,24 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
     def fadd_hall(self):
         self.OpenHall = AddHallApp(self.db, on_close=self.fopen_hall)
         self.OpenHall.show()
+
+    def fadd_session(self):
+        res, names = self.db.get_all_film()
+        if res:
+            self.table_filmsess = Table(res, names, self.add_session_form, "Задать сеанс",
+                                        table_title="Таблица фильмов")
+            self.table_filmsess.show()
+        else:
+            if self.table_filmsess:
+                self.table_filmsess.close()
+            self.msg.setText("Нет фильмов для назначения сеанса.")
+            self.msg.show()
+
+    def add_session_form(self, film):
+        self.OpenSession = AddSessionApp(db=self.db,
+                                         film=film, on_close=self.fopen_session)
+        self.OpenSession.show()
+        self.table_filmsess.close()
 
     def print_db(self):
         res = self.db.get_all_stuff()
@@ -842,6 +895,89 @@ class AddFilmApp(QtWidgets.QMainWindow, add_film.Ui_MainWindow):
                                      self.db.get_id_restrict(restrict), typehall)
                     self.msg.setWindowTitle("Сообщение о добавлении")
                     self.msg.setText("Фильм успешно добавлен.")
+                self.msg.show()
+            except DBException as e:
+                text, *_ = e.args
+                self.msg.setText(text)
+                self.msg.show()
+
+
+class AddSessionApp(QtWidgets.QMainWindow, session1.Ui_MainWindow):
+    def __init__(self, db, film, data=None, *, on_close=None):
+        super().__init__()
+        self.setupUi(self)
+        self.pushButton.clicked.connect(self.load_halls)
+        self.pushButton_2.clicked.connect(self.next_form)
+        self.db = db
+        self.data = data
+        self.film = film
+        self.on_close = on_close
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setIcon(QtWidgets.QMessageBox.Information)
+        self.msg.setWindowTitle("Ошибка добавления сеанса")
+        allcinema = self.db.get_all_cinema1(film)[0]
+        cinema_text = []
+        for t in allcinema:
+            cinema_text.append(t[0])
+        self.cinema.clear()
+        self.cinema.addItems(cinema_text)
+        self.hall.clear()
+        if data:
+            self.dateTime.setDateTime(data[1])
+            self.cinema.setCurrentText(self.db.get_one_cinema1(data[2])[2])
+            self.load_halls()
+            self.hall.setCurrentText(self.db.get_one_hall(data[2])[1])
+            self.pushButton_2.setText("Изменить сеанс")
+            self.msg.setWindowTitle("Ошибка изменения сеанса")
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.msg.buttonClicked.connect(self.ok)
+
+    def ok(self):
+        self.msg.close()
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        if self.on_close:
+            self.on_close()
+
+    def load_halls(self):
+        cinemahalls = self.db.get_allcinema_hall1(self.cinema.currentText(), self.film)
+        self.hall.clear()
+        self.hall.addItems(
+            cinemahalls if isinstance(cinemahalls, str) else [c[0] for c in cinemahalls])
+
+    def next_form(self):
+        cinema = self.cinema.currentText()
+        hall = self.hall.currentText()
+        dateTime = self.dateTime.text()
+        cinema = cinema if cinema else None
+        hall = hall if hall else None
+        if not cinema:
+            self.msg.setText("Выберите кинотеатр.")
+            self.msg.show()
+        elif not hall:
+            self.msg.setText("Выберите зал.")
+            self.msg.show()
+        elif not dateTime:
+            self.msg.setText("Выберите время.")
+            self.msg.show()
+        elif not self.db.check_hallincinema(hall, cinema):
+            self.msg.setText(
+                "Нажмите на конопку \"Показать возможные залы\" и выберите зал.")
+            self.msg.show()
+        else:
+            try:
+                if self.data:
+                    if not self.db.number_bue_session(self.data[0]):
+                        self.db.update_session(self.data[0], self.db.get_id_hall(hall, cinema),
+                                               dateTime, self.film)
+                        self.msg.setWindowTitle("Сообщение об изменении")
+                        self.msg.setText("Сеанс успешно изменен.")
+                    else:
+                        self.msg.setText("Сеанс не будет изменен, на него уже куплены билеты.")
+                else:
+                    self.db.add_session(self.db.get_id_hall(hall, cinema), dateTime, self.film)
+                    self.msg.setWindowTitle("Сообщение о добавлении")
+                    self.msg.setText("Сеанс успешно добавлен.")
                 self.msg.show()
             except DBException as e:
                 text, *_ = e.args

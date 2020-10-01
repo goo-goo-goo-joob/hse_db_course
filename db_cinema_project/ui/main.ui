@@ -79,7 +79,7 @@
      </widget>
     </item>
     <item row="28" column="2">
-     <widget class="QPushButton" name="pushButton_32">
+     <widget class="QPushButton" name="open_session_btn">
       <property name="text">
        <string>Просмотр сеансов</string>
       </property>

@@ -100,6 +100,8 @@ create table сеанс
     датавремя   datetime not null,
     idзал       int      not null,
     idтипсеанса int,
+    длинаряда   int unsigned,
+    числорядов  int unsigned,
     цена        int unsigned,
     idфильм     int      not null,
     constraint зал_fk
