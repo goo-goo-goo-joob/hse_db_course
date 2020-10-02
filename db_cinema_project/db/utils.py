@@ -33,7 +33,7 @@ class DBCinema:
 
     def get_all_restrict(self):
         with self.conn.cursor() as c:
-            sql = """SELECT * FROM возрастноеограничение ORDER BY возраст"""
+            sql = """SELECT * FROM возрастноеограничение ORDER BY CHAR_LENGTH(возраст), возраст"""
             c.execute(sql)
             return c.fetchall(), c.description
 
@@ -656,6 +656,12 @@ WHERE id = %s'''
             c.execute(sql, (self.get_id_cinema(cinema), hall))
             return c.rowcount
 
+    def number_cinemasession(self, cinema):
+        with self.conn.cursor() as c:
+            sql = "SELECT * FROM сеанс JOIN зал з on з.id = сеанс.idзал WHERE idкинотеатр = %s"
+            c.execute(sql, (cinema))
+            return c.rowcount
+
     def number_bue_session(self, idsess):
         with self.conn.cursor() as c:
             sql = "SELECT id FROM билетнаместо WHERE idсеанс = %s AND idпокупатель IS NOT NUll"
@@ -710,25 +716,17 @@ WHERE id = %s'''
                 sql = 'DELETE FROM типсеанса WHERE id = %s'
                 c.execute(sql, (id_,))
                 self.conn.commit()
-        except pymysql.IntegrityError as e:
-            code, *_ = e.args
-            if code == 1451:
-                raise DBException("В удалении отказано. На указанный тип сеанса уже созданы сеансы.") from e
-            raise DBException("Не удалось удалить тип сеанса.") from e
         except Exception as e:
             raise DBException("Не удалось удалить тип сеанса.") from e
 
     def delete_one_cinema(self, id_):
         try:
             with self.conn.cursor() as c:
+                sql = 'DELETE FROM зал WHERE idкинотеатр = %s'
+                c.execute(sql, (id_,))
                 sql = 'DELETE FROM кинотеатр WHERE id = %s'
                 c.execute(sql, (id_,))
                 self.conn.commit()
-        except pymysql.IntegrityError as e:
-            code, *_ = e.args
-            if code == 1451:
-                raise DBException("В удалении отказано. На указанный кинотеатр уже созданы залы.") from e
-            raise DBException("Не удалось удалить кинотеатр.") from e
         except Exception as e:
             raise DBException("Не удалось удалить кинотеатр.") from e
 

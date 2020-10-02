@@ -182,15 +182,14 @@ CREATE TRIGGER create_сеанс1
     ON сеанс
     FOR EACH ROW
 BEGIN
-    DECLARE типсеанса_ int unsigned;
     DECLARE надбавкасеанса_ int unsigned;
     DECLARE надбавказала_ int unsigned;
     DECLARE базоваяцена_ int unsigned;
     DECLARE макс_ряд_ int unsigned;
     DECLARE макс_место_ int unsigned;
 
-    SELECT типсеанса.id, типсеанса.надбавкасеанса
-    INTO типсеанса_, надбавкасеанса_
+    SELECT типсеанса.надбавкасеанса
+    INTO надбавкасеанса_
     FROM типсеанса
     WHERE типсеанса.времяначала <= TIME(NEW.датавремя)
       and типсеанса.времяконца >= TIME(NEW.датавремя);
@@ -211,7 +210,7 @@ BEGIN
         FROM зал
         WHERE зал.id = NEW.idзал);
 
-    SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
+    SET @цена = IFNULL(надбавкасеанса_, 0) + надбавказала_ + базоваяцена_;
 
     SELECT числорядов
     INTO макс_ряд_
@@ -224,7 +223,6 @@ BEGIN
     WHERE зал.id = NEW.idзал;
 
     SET new.цена = @цена;
-    SET new.idтипсеанса = типсеанса_;
     SET new.длинаряда = макс_место_;
     SET new.числорядов = макс_ряд_;
 END;
@@ -263,15 +261,14 @@ CREATE TRIGGER update_сеанс
     ON сеанс
     FOR EACH ROW
 BEGIN
-    DECLARE типсеанса_ int unsigned;
     DECLARE надбавкасеанса_ int unsigned;
     DECLARE надбавказала_ int unsigned;
     DECLARE базоваяцена_ int unsigned;
     DECLARE макс_ряд_ int unsigned;
     DECLARE макс_место_ int unsigned;
 
-    SELECT типсеанса.id, типсеанса.надбавкасеанса
-    INTO типсеанса_, надбавкасеанса_
+    SELECT типсеанса.надбавкасеанса
+    INTO надбавкасеанса_
     FROM типсеанса
     WHERE типсеанса.времяначала <= TIME(NEW.датавремя)
       and типсеанса.времяконца >= TIME(NEW.датавремя);
@@ -292,7 +289,7 @@ BEGIN
         FROM зал
         WHERE зал.id = NEW.idзал);
 
-    SET @цена = надбавкасеанса_ + надбавказала_ + базоваяцена_;
+    SET @цена = IFNULL(надбавкасеанса_, 0) + надбавказала_ + базоваяцена_;
 
     SELECT числорядов
     INTO макс_ряд_
@@ -305,7 +302,6 @@ BEGIN
     WHERE зал.id = NEW.idзал;
 
     SET new.цена = @цена;
-    SET new.idтипсеанса = типсеанса_;
     SET new.длинаряда = макс_место_;
     SET new.числорядов = макс_ряд_;
 

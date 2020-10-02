@@ -106,13 +106,17 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
             self.msg.show()
 
     def delete_cinema(self, id_):
-        try:
-            self.db.delete_one_cinema(id_)
-            self.fopen_cinema()
-        except DBException as e:
-            text, *_ = e.args
-            self.msg.setText(text)
+        if self.db.number_cinemasession(id_) > 0:
+            self.msg.setText("В удалении отказано. На указанный кинотеатр уже созданы сеансы.")
             self.msg.show()
+        else:
+            try:
+                self.db.delete_one_cinema(id_)
+                self.fopen_cinema()
+            except DBException as e:
+                text, *_ = e.args
+                self.msg.setText(text)
+                self.msg.show()
 
     def delete_typehall(self, id_):
         try:
@@ -390,7 +394,7 @@ class AddGenreApp(QtWidgets.QMainWindow, genre.Ui_MainWindow):
 
     def add_genre_db(self):
         name = self.lineEdit.text()
-        name = name.lower() if name else None
+        name = name if name else None
         if not name:
             self.msg.setText("Введите название жанра.")
             self.msg.show()
@@ -438,7 +442,7 @@ class AddProducerApp(QtWidgets.QMainWindow, producer.Ui_MainWindow):
 
     def add_producer_db(self):
         name = self.lineEdit.text()
-        name = name.lower() if name else None
+        name = name if name else None
         if not name:
             self.msg.setText("Введите ФИО режиссера.")
             self.msg.show()
@@ -486,7 +490,7 @@ class AddRestrictApp(QtWidgets.QMainWindow, restrict.Ui_MainWindow):
 
     def add_restrict_db(self):
         name = self.lineEdit.text()
-        name = name.lower() if name else None
+        name = name if name else None
         if not name:
             self.msg.setText("Введите ограничение.")
             self.msg.show()
@@ -542,7 +546,7 @@ class AddTypesessApp(QtWidgets.QMainWindow, typesess.Ui_MainWindow):
         start = self.beginTime.text()
         end = self.endTime.text()
         additon = self.additon.text()
-        name = name.lower() if name else None
+        name = name if name else None
         start = start if start else None
         end = end if end else None
         additon = additon if additon else None
@@ -606,8 +610,8 @@ class AddCinemaApp(QtWidgets.QMainWindow, cinema.Ui_MainWindow):
         name = self.name.text()
         address = self.address.text()
         price = self.price.text()
-        name = name.lower() if name else None
-        address = address.lower() if address else None
+        name = name if name else None
+        address = address if address else None
         price = price if price else None
         if not name:
             self.msg.setText("Введите название кинотеатра.")
@@ -664,7 +668,7 @@ class AddTypehallApp(QtWidgets.QMainWindow, typehall.Ui_MainWindow):
     def add_typehall_db(self):
         name = self.name.text()
         price = self.price.text()
-        name = name.lower() if name else None
+        name = name if name else None
         price = price if price else None
         if not name:
             self.msg.setText("Введите название типа зала.")
@@ -737,7 +741,7 @@ class AddHallApp(QtWidgets.QMainWindow, hall.Ui_MainWindow):
         number = self.number.text()
         typehall = self.typehall.currentText()
         cinema = self.cinema.currentText()
-        name = name.lower() if name else None
+        name = name if name else None
         length = length if length else None
         number = number if number else None
         typehall = typehall if typehall else None
@@ -849,8 +853,8 @@ class AddFilmApp(QtWidgets.QMainWindow, add_film.Ui_MainWindow):
         producer = self.producer.currentText()
         restrict = self.restrict.currentText()
         typehall = self.typehall.currentData()
-        name = name.lower() if name else None
-        descript = descript.lower() if descript else None
+        name = name if name else None
+        descript = descript if descript else None
         year = year if year else None
         duration = duration if duration != '0:00' else None
         genre = genre if genre else None

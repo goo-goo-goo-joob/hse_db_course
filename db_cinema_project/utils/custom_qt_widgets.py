@@ -95,7 +95,7 @@ class CheckableComboBox(QComboBox):
     def setTexts(self, texts):
         texts = [t[0] for t in texts]
         if isinstance(texts, int):
-            item = self.model().item(0)
+            item = self.model().item(texts)
             item.setCheckState(Qt.Checked)
         else:
             for i in range(self.model().rowCount()):
