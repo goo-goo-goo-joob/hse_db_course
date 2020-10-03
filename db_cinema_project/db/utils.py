@@ -74,7 +74,7 @@ FROM зал
          JOIN форматыфильмов ф on зал.idтипзала = ф.idтипзала
 WHERE idкинотеатр = %s
   and ф.idфильм = %s"""
-            c.execute(sql, (self.get_id_cinema(cinema),film))
+            c.execute(sql, (self.get_id_cinema(cinema), film))
             return c.fetchall()
 
     def get_all_typehall(self):
@@ -263,6 +263,16 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
             sql = "SELECT idфильм FROM форматыфильмов WHERE idтипзала = %s"
             c.execute(sql, (self.get_id_typehall2(hall, cinema)))
             return c.fetchall()
+
+    def get_session_buyers(self, idsess):
+        with self.conn.cursor() as c:
+            sql = """SELECT п.id, п.фио, номерряда, номерместа
+FROM билетнаместо
+         JOIN покупатель п on п.id = билетнаместо.idпокупатель
+WHERE idсеанс = %s
+ORDER BY п.фио, номерряда, номерместа"""
+            c.execute(sql, (idsess, ))
+            return c.fetchall(), c.description
 
     def add_user(self, name, email, number, hash_):
         try:
@@ -658,13 +668,22 @@ WHERE id = %s'''
 
     def number_cinemasession(self, cinema):
         with self.conn.cursor() as c:
-            sql = "SELECT * FROM сеанс JOIN зал з on з.id = сеанс.idзал WHERE idкинотеатр = %s AND сеанс.датавремя >= NOW()"
+            sql = """SELECT *
+FROM сеанс
+         JOIN зал з on з.id = сеанс.idзал
+         JOIN фильм ф on ф.id = сеанс.idфильм
+WHERE idкинотеатр = %s
+  AND сеанс.датавремя + ф.длительность >= NOW()"""
             c.execute(sql, (cinema))
             return c.rowcount
 
     def number_hallsession(self, hall):
         with self.conn.cursor() as c:
-            sql = "SELECT * FROM сеанс WHERE idзал = %s AND сеанс.датавремя >= NOW()"
+            sql = """SELECT *
+FROM сеанс
+         JOIN фильм ф on ф.id = сеанс.idфильм
+WHERE idзал = %s
+  AND сеанс.датавремя + ф.длительность >= NOW()"""
             c.execute(sql, (hall))
             return c.rowcount
 
@@ -676,8 +695,23 @@ WHERE id = %s'''
 
     def number_film_session(self, idfilm):
         with self.conn.cursor() as c:
-            sql = "SELECT * FROM сеанс WHERE idфильм = %s and датавремя >= NOW()"
+            sql = """SELECT *
+FROM сеанс
+         JOIN фильм ф on ф.id = сеанс.idфильм
+WHERE idфильм = %s
+  and датавремя + ф.длительность >= NOW()"""
             c.execute(sql, (idfilm))
+            return c.rowcount
+
+    def session_is_now(self, idsession):
+        with self.conn.cursor() as c:
+            sql = """SELECT *
+FROM сеанс
+         JOIN фильм ф on ф.id = сеанс.idфильм
+WHERE сеанс.id = %s
+  and датавремя + ф.длительность >= NOW() 
+  and датавремя < NOW()"""
+            c.execute(sql, (idsession))
             return c.rowcount
 
     def delete_one_genre(self, id_):
@@ -689,7 +723,8 @@ WHERE id = %s'''
         except pymysql.IntegrityError as e:
             code, *_ = e.args
             if code == 1451:
-                raise DBException("В удалении отказано. На указанный жанр уже созданы фильмы.") from e
+                raise DBException(
+                    "В удалении отказано. На указанный жанр уже созданы фильмы.") from e
             raise DBException("Не удалось удалить жанр.") from e
         except Exception as e:
             raise DBException("Не удалось удалить жанр.") from e
@@ -703,7 +738,8 @@ WHERE id = %s'''
         except pymysql.IntegrityError as e:
             code, *_ = e.args
             if code == 1451:
-                raise DBException("В удалении отказано. На указанного режиссера уже созданы фильмы.") from e
+                raise DBException(
+                    "В удалении отказано. На указанного режиссера уже созданы фильмы.") from e
             raise DBException("Не удалось удалить режиссера.") from e
         except Exception as e:
             raise DBException("Не удалось удалить режиссера.") from e
@@ -717,7 +753,8 @@ WHERE id = %s'''
         except pymysql.IntegrityError as e:
             code, *_ = e.args
             if code == 1451:
-                raise DBException("В удалении отказано. На указанное ограничение уже созданы фильмы.") from e
+                raise DBException(
+                    "В удалении отказано. На указанное ограничение уже созданы фильмы.") from e
             raise DBException("Не удалось удалить ограничение.") from e
         except Exception as e:
             raise DBException("Не удалось удалить ограничение.") from e
@@ -751,7 +788,8 @@ WHERE id = %s'''
         except pymysql.IntegrityError as e:
             code, *_ = e.args
             if code == 1451:
-                raise DBException("В удалении отказано. На указанный тип зала уже созданы залы или фильмы.") from e
+                raise DBException(
+                    "В удалении отказано. На указанный тип зала уже созданы залы или фильмы.") from e
             raise DBException("Не удалось удалить тип зала.") from e
         except Exception as e:
             raise DBException("Не удалось удалить тип зала.") from e
@@ -781,10 +819,17 @@ WHERE id = %s'''
     def delete_old_session(self):
         try:
             with self.conn.cursor() as c:
-                sql = 'DELETE б FROM билетнаместо б JOIN сеанс с ON б.idсеанс = с.id WHERE с.датавремя < NOW()'
-                c.execute(sql,)
-                sql = 'DELETE FROM сеанс WHERE датавремя < NOW()'
-                c.execute(sql,)
+                sql = """DELETE б
+FROM билетнаместо б
+         JOIN сеанс с ON б.idсеанс = с.id
+         JOIN фильм ф on ф.id = с.idфильм
+WHERE с.датавремя + ф.длительность < NOW()"""
+                c.execute(sql, )
+                sql = """DELETE c
+FROM сеанс c
+         JOIN фильм ф on ф.id = c.idфильм
+WHERE датавремя + ф.длительность < NOW()"""
+                c.execute(sql, )
                 self.conn.commit()
         except Exception as e:
             raise DBException("Не удалось удалить устаревшие сеансы.") from e
