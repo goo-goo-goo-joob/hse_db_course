@@ -658,14 +658,26 @@ WHERE id = %s'''
 
     def number_cinemasession(self, cinema):
         with self.conn.cursor() as c:
-            sql = "SELECT * FROM сеанс JOIN зал з on з.id = сеанс.idзал WHERE idкинотеатр = %s"
+            sql = "SELECT * FROM сеанс JOIN зал з on з.id = сеанс.idзал WHERE idкинотеатр = %s AND сеанс.датавремя >= NOW()"
             c.execute(sql, (cinema))
+            return c.rowcount
+
+    def number_hallsession(self, hall):
+        with self.conn.cursor() as c:
+            sql = "SELECT * FROM сеанс WHERE idзал = %s AND сеанс.датавремя >= NOW()"
+            c.execute(sql, (hall))
             return c.rowcount
 
     def number_bue_session(self, idsess):
         with self.conn.cursor() as c:
             sql = "SELECT id FROM билетнаместо WHERE idсеанс = %s AND idпокупатель IS NOT NUll"
             c.execute(sql, (idsess))
+            return c.rowcount
+
+    def number_film_session(self, idfilm):
+        with self.conn.cursor() as c:
+            sql = "SELECT * FROM сеанс WHERE idфильм = %s and датавремя >= NOW()"
+            c.execute(sql, (idfilm))
             return c.rowcount
 
     def delete_one_genre(self, id_):
@@ -750,11 +762,6 @@ WHERE id = %s'''
                 sql = 'DELETE FROM зал WHERE id = %s'
                 c.execute(sql, (id_,))
                 self.conn.commit()
-        except pymysql.IntegrityError as e:
-            code, *_ = e.args
-            if code == 1451:
-                raise DBException("В удалении отказано. На указанный зал уже созданы сеансы.") from e
-            raise DBException("Не удалось удалить зал.") from e
         except Exception as e:
             raise DBException("Не удалось удалить зал.") from e
 
@@ -768,13 +775,19 @@ WHERE id = %s'''
                 sql = 'DELETE FROM фильм WHERE id = %s'
                 c.execute(sql, (id_,))
                 self.conn.commit()
-        except pymysql.IntegrityError as e:
-            code, *_ = e.args
-            if code == 1451:
-                raise DBException("В удалении отказано. На указанный фильм уже созданы сеансы.") from e
-            raise DBException("Не удалось удалить фильм.") from e
         except Exception as e:
             raise DBException("Не удалось удалить фильм.") from e
+
+    def delete_old_session(self):
+        try:
+            with self.conn.cursor() as c:
+                sql = 'DELETE б FROM билетнаместо б JOIN сеанс с ON б.idсеанс = с.id WHERE с.датавремя < NOW()'
+                c.execute(sql,)
+                sql = 'DELETE FROM сеанс WHERE датавремя < NOW()'
+                c.execute(sql,)
+                self.conn.commit()
+        except Exception as e:
+            raise DBException("Не удалось удалить устаревшие сеансы.") from e
 
     def delete_one_session(self, id_):
         try:

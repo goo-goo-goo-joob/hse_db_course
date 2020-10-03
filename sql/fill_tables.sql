@@ -241,3 +241,14 @@ insert into cinemadb.сеанс (датавремя, idзал, idфильм)
 values ('2020-10-10 14:00', 9, 17);
 insert into cinemadb.сеанс (датавремя, idзал, idфильм)
 values ('2020-10-10 14:00', 8, 17);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм)
+values ('2020-10-03 13:00', 10, 17);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм)
+values ('2020-10-03 13:00', 9, 17);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм)
+values ('2020-10-03 13:00', 8, 17);
+
+insert into cinemadb.сеанс (датавремя, idзал, idфильм)
+values ('2020-10-03 13:06', 1, 1);
+insert into cinemadb.сеанс (датавремя, idзал, idфильм)
+values ('2020-10-03 13:08', 2, 1);

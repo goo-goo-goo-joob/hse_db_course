@@ -35,7 +35,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE procedure_ограничение(IN возраст VARCHAR(3))
 BEGIN
-    IF (возраст REGEXP '^[1-9]?[0-9][+]') = 0 THEN
+    IF (возраст REGEXP '^[1-9]?[0-9][+]$') = 0 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Введите ограничение в соответствии с форматом x+.';
     END IF;
