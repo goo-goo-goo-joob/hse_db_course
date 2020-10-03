@@ -21,7 +21,7 @@ class Table(QtWidgets.QWidget):
         self.tableWidget.setRowCount(len(res))
         self.tableWidget.setColumnCount(
             len(res[0]) - 1 + (button_edit is not None) + (
-                        button_delete is not None) + + (button_new is not None))
+                    button_delete is not None) + (button_new is not None))
 
         if names is not None:
             horizontal_header = [x[0] for x in names[1:]]

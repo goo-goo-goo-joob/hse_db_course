@@ -408,11 +408,6 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.OpenSession.show()
         self.table_filmsess.close()
 
-    def print_db(self):
-        res = self.db.get_all_stuff()
-        self.table = Table(res)
-        self.table.show()
-
 
 class AddGenreApp(QtWidgets.QMainWindow, genre.Ui_MainWindow):
     def __init__(self, db, data=None, *, on_close=None):

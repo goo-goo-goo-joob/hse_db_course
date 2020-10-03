@@ -246,6 +246,18 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
             c.execute(sql, (idfilm,))
             return c.fetchall()
 
+    def get_session_rowcol(self, idsess):
+        with self.conn.cursor() as c:
+            sql = 'SELECT числорядов, длинаряда FROM сеанс WHERE id = %s'
+            c.execute(sql, (idsess,))
+            return c.fetchone()
+
+    def get_sessionplaces(self, idsess):
+        with self.conn.cursor() as c:
+            sql = 'SELECT номерряда, номерместа, idпокупатель FROM билетнаместо WHERE idсеанс = %s'
+            c.execute(sql, (idsess,))
+            return c.fetchall()
+
     def get_user_name_by_id(self, uid):
         with self.conn.cursor() as c:
             sql = "SELECT фио FROM покупатель WHERE id = %s"
@@ -254,7 +266,7 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
 
     def get_all_user_numbers(self):
         with self.conn.cursor() as c:
-            sql = "SELECT фио, телефон FROM покупатель "
+            sql = "SELECT фио, телефон FROM покупатель WHERE телефон IS NOT NULL "
             c.execute(sql)
             return c.fetchall()
 
