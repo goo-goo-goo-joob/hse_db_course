@@ -11,49 +11,42 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Личный кабинет</string>
+   <string>Выбор кинотеатра</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QLabel" name="label">
-      <property name="font">
-       <font>
-        <family>Segoe Script</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
       <property name="text">
-       <string>TextLabel</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
+       <string>Выберите кинотеатр, в который хотите пойти:</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="cinema_btn">
-      <property name="font">
-       <font>
-        <family>Candara</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
+     <widget class="QComboBox" name="cinema"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Выбрать кинотеатр</string>
+       <string>Выберите удобное время посещения:</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_2">
-      <property name="font">
-       <font>
-        <family>Candara</family>
-        <pointsize>12</pointsize>
-       </font>
+     <widget class="QDateEdit" name="date">
+      <property name="minimumDate">
+       <date>
+        <year>2020</year>
+        <month>10</month>
+        <day>1</day>
+       </date>
       </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
       <property name="text">
-       <string>Выбрать фильм</string>
+       <string>Показать расписание</string>
       </property>
      </widget>
     </item>

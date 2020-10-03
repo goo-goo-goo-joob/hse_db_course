@@ -32,8 +32,8 @@ class EnterApp(QtWidgets.QMainWindow, enter_form.Ui_MainWindow):
     def enter(self):
         email = self.lineEdit.text()
         password = self.lineEdit_2.text()
-        email = email if email else None
-        password = password if password else None
+        email = email if email else 'mvsamodelkina@edu.hse.ru' #None
+        password = password if password else 'mypass' #None
         if not email:
             self.msg.setText("Введите почту.")
             self.msg.show()

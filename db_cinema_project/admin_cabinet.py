@@ -40,6 +40,8 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.table_typehall = None
         self.table_hall = None
         self.table_filmsess = None
+        self.table_session = None
+        self.table_session1 = None
         self.OpenGenre = None
         self.OpenProducer = None
         self.OpenRestrict = None
@@ -164,6 +166,12 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
                 self.msg.show()
 
     def change_film(self, id_):
+        try:
+            self.db.delete_old_session()
+        except DBException as e:
+            text, *_ = e.args
+            self.msg.setText(text)
+            self.msg.show()
         data = self.db.get_one_film(id_)
         self.OpenFilm = AddFilmApp(self.db, data, on_close=self.fopen_film)
         self.OpenFilm.show()
@@ -199,15 +207,26 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.OpenTypehall.show()
 
     def change_hall(self, id_):
+        try:
+            self.db.delete_old_session()
+        except DBException as e:
+            text, *_ = e.args
+            self.msg.setText(text)
+            self.msg.show()
         data = self.db.get_one_hall(id_)
         self.OpenHall = AddHallApp(self.db, data, on_close=self.fopen_hall)
         self.OpenHall.show()
 
     def change_session(self, id_):
-        data = self.db.get_one_session(id_)
-        self.OpenSession = AddSessionApp(self.db, data=data, film=data[-1],
-                                         on_close=self.fopen_session)
-        self.OpenSession.show()
+        if self.db.session_is_now(id_):
+            self.msg.setText(
+                "Сеанс уже идет, он не может быть изменен.")
+            self.msg.show()
+        else:
+            data = self.db.get_one_session(id_)
+            self.OpenSession = AddSessionApp(self.db, data=data, film=data[-1],
+                                             on_close=self.fopen_session)
+            self.OpenSession.show()
 
     def fopen_film(self):
         res, names = self.db.get_all_film()
@@ -317,14 +336,26 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.db.delete_old_session()
         res, names = self.db.get_all_session()
         if res:
-            self.table_session = Table(res, names, self.change_session, "Обновить",
+            self.table_session1 = Table(res, names, self.change_session, "Обновить",
                                        self.delete_session, "Удалить",
-                                       "Таблица сеансов")
+                                       "Таблица сеансов", self.fopen_buyers,
+                                       "Покупки")
+            self.table_session1.show()
+        else:
+            if self.table_session1:
+                self.table_session1.close()
+            self.msg.setText("Нет сеансов для просмотра.")
+            self.msg.show()
+
+    def fopen_buyers(self, idsess):
+        res, names = self.db.get_session_buyers(idsess)
+        if res:
+            self.table_session = Table(res, names, "Таблица покупок")
             self.table_session.show()
         else:
             if self.table_session:
                 self.table_session.close()
-            self.msg.setText("Нет сеансов для просмотра.")
+            self.msg.setText("На данный сеанс нет купленных билетов.")
             self.msg.show()
 
     def fadd_film(self):
@@ -376,11 +407,6 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
                                          film=film, on_close=self.fopen_session)
         self.OpenSession.show()
         self.table_filmsess.close()
-
-    def print_db(self):
-        res = self.db.get_all_stuff()
-        self.table = Table(res)
-        self.table.show()
 
 
 class AddGenreApp(QtWidgets.QMainWindow, genre.Ui_MainWindow):
@@ -741,6 +767,7 @@ class AddHallApp(QtWidgets.QMainWindow, hall.Ui_MainWindow):
             if self.db.number_hallsession(data[0]) > 0:
                 self.typehall.setDisabled(True)
             self.cinema.setCurrentText(self.db.get_one_cinema(data[5])[2])
+            self.cinema.setDisabled(True)
             self.pushButton.setText("Изменить зал")
             self.msg.setWindowTitle("Ошибка изменения зала")
         self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -952,6 +979,9 @@ class AddSessionApp(QtWidgets.QMainWindow, session1.Ui_MainWindow):
             self.cinema.setCurrentText(cinema_addr)
             self.load_halls(cinema_addr)
             self.hall.setCurrentText(self.db.get_one_hall(data[2])[1])
+            if not self.db.number_bue_session(self.data[0]):
+                self.cinema.setDisabled(True)
+                self.dateTime.setDisabled(True)
             self.pushButton_2.setText("Изменить сеанс")
             self.msg.setWindowTitle("Ошибка изменения сеанса")
         self.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -996,15 +1026,11 @@ class AddSessionApp(QtWidgets.QMainWindow, session1.Ui_MainWindow):
         else:
             try:
                 if self.data:
-                    if not self.db.number_bue_session(self.data[0]):
-                        self.db.update_session(self.data[0],
-                                               self.db.get_id_hall(hall, cinema),
-                                               dateTime, self.film)
-                        self.msg.setWindowTitle("Сообщение об изменении")
-                        self.msg.setText("Сеанс успешно изменен.")
-                    else:
-                        self.msg.setText(
-                            "Сеанс не будет изменен, на него уже куплены билеты.")
+                    self.db.update_session(self.data[0],
+                                           self.db.get_id_hall(hall, cinema),
+                                           dateTime, self.film)
+                    self.msg.setWindowTitle("Сообщение об изменении")
+                    self.msg.setText("Сеанс успешно изменен.")
                 else:
                     self.db.add_session(self.db.get_id_hall(hall, cinema), dateTime,
                                         self.film)
