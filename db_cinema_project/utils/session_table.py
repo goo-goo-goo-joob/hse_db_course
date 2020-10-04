@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QWidget, QGridLayout
-from functools import partial
 
 LastStateRole = QtCore.Qt.UserRole
 
@@ -46,7 +45,6 @@ class PlacesTable(QtWidgets.QMainWindow):
             item.setData(LastStateRole, item.checkState())
             self.tablewidget.setItem(row_data[0] - 1, row_data[1] - 1, item)
 
-
     def get_places(self):
         self.places = []
         for r in range(self.row):
@@ -55,5 +53,4 @@ class PlacesTable(QtWidgets.QMainWindow):
                 currentState = item.checkState()
                 if currentState == QtCore.Qt.Checked:
                     self.places.append((r + 1, c + 1))
-        partial(self.button_callback, self.places)
-
+        self.button_callback(self.places)

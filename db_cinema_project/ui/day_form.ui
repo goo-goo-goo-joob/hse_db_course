@@ -7,33 +7,23 @@
     <x>0</x>
     <y>0</y>
     <width>320</width>
-    <height>240</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Выбор кинотеатра</string>
+   <string>Выбор дня</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Выберите кинотеатр, в который хотите пойти:</string>
+       <string>Выберите удобный день посещения:</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="cinema"/>
-    </item>
-    <item>
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Выберите удобное время посещения:</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QDateEdit" name="date">
+     <widget class="QCalendarWidget" name="date">
       <property name="minimumDate">
        <date>
         <year>2020</year>
@@ -41,8 +31,8 @@
         <day>1</day>
        </date>
       </property>
-      <property name="displayFormat">
-       <string>yyyy-MM-dd</string>
+      <property name="gridVisible">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
