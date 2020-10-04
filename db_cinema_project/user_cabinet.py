@@ -20,10 +20,9 @@ class LKApp(QtWidgets.QMainWindow, lk_form.Ui_MainWindow):
 
         self.OpenBuyCinema = None
         self.OpenDate = None
-        self.table_session1 = None
-        self.table_places = None
         self.table_film = None
         self.table_tickets = None
+        self.table_buy = None
 
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
@@ -38,17 +37,16 @@ class LKApp(QtWidgets.QMainWindow, lk_form.Ui_MainWindow):
     def show_tickets(self):
         res, names = self.db.get_user_tikets(self.uid)
         if res:
-            self.table_film = Table(res, names, table_title="Таблица покупок")
-            self.table_film.show()
+            self.table_buy = Table(res, names, table_title="Таблица покупок")
+            self.table_buy.show()
         else:
-            if self.table_film:
-                self.table_film.close()
+            if self.table_buy:
+                self.table_buy.close()
             self.msg.setText("У Вас еще нет покупок.")
             self.msg.show()
 
     def buy_onfilm(self):
-        # todo: фильмы, на которые есть сеансы
-        res, names = self.db.get_all_film()
+        res, names = self.db.get_allsession_film()
         if res:
             self.table_film = Table(res, names, self.open_date, "Выбрать",
                                     table_title="Таблица фильмов")
@@ -83,6 +81,8 @@ class OpenBuyCinemaApp(QtWidgets.QMainWindow, buy_on_cinema.Ui_MainWindow):
         self.pushButton.clicked.connect(self.open_cinema_session)
         self.db = db
         self.uid = uid
+        self.table_session1 = None
+        self.table_places = None
 
         allcinema, _ = self.db.get_all_cinema()
         cinema_text = []
@@ -111,8 +111,7 @@ class OpenBuyCinemaApp(QtWidgets.QMainWindow, buy_on_cinema.Ui_MainWindow):
             self.msg.show()
         else:
             self.db.delete_old_session()
-            # todo : нормальную функцию для сеансов, передаем время и кинотеатр
-            res, names = self.db.get_all_session()
+            res, names = self.db.get_all_session_bycinematime(cinema, date)
             if res:
                 self.table_session1 = Table(res, names, button_edit=self.buy_form,
                                             button_edit_text="Выбрать места",
@@ -125,7 +124,6 @@ class OpenBuyCinemaApp(QtWidgets.QMainWindow, buy_on_cinema.Ui_MainWindow):
                 self.msg.show()
 
     def buy_form(self, idsess):
-        # TODO: проверить, есть ли места на заданный сеанс
         self.idsess = idsess
         row, col = self.db.get_session_rowcol(idsess)
         res = self.db.get_sessionplaces(idsess)
@@ -157,6 +155,8 @@ class OpenDateApp(QtWidgets.QMainWindow, day_form.Ui_MainWindow):
         self.db = db
         self.uid = uid
         self.idfilm = idfilm
+        self.table_places = None
+        self.table_session1 = None
 
         self.msg = QtWidgets.QMessageBox()
         self.msg.setIcon(QtWidgets.QMessageBox.Information)
@@ -168,14 +168,13 @@ class OpenDateApp(QtWidgets.QMainWindow, day_form.Ui_MainWindow):
         self.msg.close()
 
     def open_cinema_session(self):
-        date = self.date.selectedDate().toString('YYYY-MM-dd')
+        date = self.date.selectedDate().toString('yyyy-MM-dd')
         if not date:
             self.msg.setText("Выберите дату.")
             self.msg.show()
         else:
             self.db.delete_old_session()
-            # todo : нормальную функцию для сеансов, передаем время и фильм
-            res, names = self.db.get_all_session()
+            res, names = self.db.get_all_session_byfilmtime(self.idfilm, date)
             if res:
                 self.table_session1 = Table(res, names, button_edit=self.buy_form,
                                             button_edit_text="Выбрать места",
@@ -188,7 +187,6 @@ class OpenDateApp(QtWidgets.QMainWindow, day_form.Ui_MainWindow):
                 self.msg.show()
 
     def buy_form(self, idsess):
-        # TODO: проверить, есть ли места на заданный сеанс
         self.idsess = idsess
         row, col = self.db.get_session_rowcol(idsess)
         res = self.db.get_sessionplaces(idsess)
