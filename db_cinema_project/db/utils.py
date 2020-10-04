@@ -25,6 +25,25 @@ class DBCinema:
             c.execute(sql)
             return c.fetchall(), c.description
 
+    def get_all_genre1(self):
+        with self.conn.cursor() as c:
+            sql = """SELECT DISTINCT ж.*
+FROM жанрыфильмов
+         JOIN жанр ж on ж.id = жанрыфильмов.idжанр
+ORDER BY ж.название"""
+            c.execute(sql)
+            return c.fetchall(), c.description
+
+    def get_genre_film(self, idfilm):
+        with self.conn.cursor() as c:
+            sql = """SELECT DISTINCT ж.id, ж.название
+FROM жанрыфильмов
+         JOIN жанр ж on ж.id = жанрыфильмов.idжанр
+WHERE idфильм = %s
+ORDER BY ж.название"""
+            c.execute(sql, idfilm)
+            return c.fetchall(), c.description
+
     def get_all_producer(self):
         with self.conn.cursor() as c:
             sql = """SELECT * FROM режиссер ORDER BY фио"""
@@ -46,6 +65,12 @@ class DBCinema:
     def get_all_cinema(self):
         with self.conn.cursor() as c:
             sql = """SELECT * FROM кинотеатр ORDER BY название, адрес"""
+            c.execute(sql)
+            return c.fetchall(), c.description
+
+    def get_all_cinema2(self):
+        with self.conn.cursor() as c:
+            sql = """SELECT id, название as "Название", адрес as "Адрес" FROM кинотеатр ORDER BY название, адрес"""
             c.execute(sql)
             return c.fetchall(), c.description
 
@@ -114,9 +139,26 @@ ORDER BY название, год, р.фио"""
             c.execute(sql)
             return c.fetchall(), c.description
 
+    def get_desc_film(self, desc):
+        with self.conn.cursor() as c:
+            sql = """SELECT фильм.id,
+       название as 'Название',
+       описание as 'Описание',
+       год as 'Год',
+       длительность as 'Длительность',
+       возраст as 'Ограничение',
+       фио as 'Режиссер'
+FROM фильм
+         JOIN возрастноеограничение в on в.id = фильм.idвозраст
+         JOIN режиссер р on р.id = фильм.idрежиссер
+WHERE описание LIKE %s OR название LIKE %s
+ORDER BY название, год, р.фио"""
+            c.execute(sql, ("%"+desc+"%", "%"+desc+"%"))
+            return c.fetchall(), c.description
+
     def get_allsession_film(self):
         '''
-        возвращает все фильмы на которые есть сеанссы и свободные места
+        возвращает все фильмы на которые есть сеансы и свободные места
         '''
         with self.conn.cursor() as c:
             sql = """SELECT фильм.id,
@@ -158,6 +200,62 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
             c.execute(sql)
             return c.fetchall(), c.description
 
+    def get_week_session(self):
+        with self.conn.cursor() as c:
+            sql = """SELECT *
+FROM сеанс
+WHERE датавремя < NOW() + INTERVAL 1 week"""
+            c.execute(sql)
+            return c.fetchall(), c.description
+
+    def get_money(self):
+        with self.conn.cursor() as c:
+            sql = """select кинотеатр.id,
+       кинотеатр.название as `Кинотеатр`,
+       адрес              as `Адрес`,
+       sum(a.цена)           `Ожидаемая выручка, руб.`
+from кинотеатр
+         join
+     (select зал.idкинотеатр, сеанс.цена, билетнаместо.idпокупатель
+      from сеанс
+               join зал on сеанс.idзал = зал.id
+               join билетнаместо on сеанс.id = билетнаместо.idсеанс
+      where сеанс.датавремя > now()
+        and сеанс.датавремя <= now() + interval 1 week
+        and билетнаместо.idпокупатель is not null) a
+     on кинотеатр.id = a.idкинотеатр
+group by кинотеатр
+order by sum(a.цена) desc, `Кинотеатр`;"""
+            c.execute(sql)
+            return c.fetchall(), c.description
+
+    def get_cheap_session(self, money):
+        with self.conn.cursor() as c:
+            sql = """select кинотеатр.id,
+       кинотеатр.название as `Кинотеатр`,
+       адрес              as `Адрес`,
+       min(a.цена)           `Минимальная цена билета`
+from кинотеатр
+         JOIN зал з on кинотеатр.id = з.idкинотеатр
+         JOIN сеанс с on з.id = с.idзал
+         join
+     (select зал.idкинотеатр, сеанс.цена
+      from сеанс
+               join зал on сеанс.idзал = зал.id
+      where сеанс.датавремя > now()
+        and сеанс.датавремя <= now() + interval 1 week) a
+     on кинотеатр.id = a.idкинотеатр
+         JOIN (SELECT idсеанс, COUNT(id) as tot
+               FROM билетнаместо
+               WHERE idпокупатель IS NOT NULL
+               GROUP BY idсеанс) t on t.idсеанс = с.id
+WHERE с.длинаряда * с.числорядов != t.tot
+group by кинотеатр
+having min(a.цена) <= %s
+order by min(a.цена), `Кинотеатр`;"""
+            c.execute(sql, money)
+            return c.fetchall(), c.description
+
     def get_all_session_bycinematime(self, cinema, time):
         with self.conn.cursor() as c:
             sql = """SELECT сеанс.id,
@@ -166,7 +264,8 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
        ф.год           as 'Год',
        к.адрес         as 'Кинотеатр',
        сеанс.датавремя as ' Дата',
-       сеанс.цена      as 'Стоимость'
+       сеанс.цена      as 'Стоимость',
+       сеанс.длинаряда * сеанс.числорядов - t.tot as 'Свободно'
 FROM сеанс
          JOIN зал з on з.id = сеанс.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
@@ -190,7 +289,8 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
             sql = """SELECT сеанс.id,
        к.адрес         as 'Кинотеатр',
        сеанс.датавремя as ' Дата',
-       сеанс.цена as 'Стоимость'
+       сеанс.цена as 'Стоимость',
+       сеанс.длинаряда * сеанс.числорядов - t.tot as 'Свободно'
 FROM сеанс
          JOIN зал з on з.id = сеанс.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
@@ -315,6 +415,24 @@ ORDER BY к.адрес, сеанс.датавремя, сеанс.цена;"""
             c.execute(sql, (idfilm,))
             return c.fetchall()
 
+    def get_genre_film2(self, genre):
+        with self.conn.cursor() as c:
+            sql = '''SELECT DISTINCT ф.id,
+       ф.название     as 'Название',
+       ф.описание     as 'Описание',
+       ф.год          as 'Год',
+       ф.длительность as 'Длительность',
+       возраст      as 'Ограничение',
+       фио          as 'Режиссер'
+FROM жанрыфильмов
+         JOIN жанр ж on ж.id = жанрыфильмов.idжанр
+         JOIN фильм ф on ф.id = жанрыфильмов.idфильм
+         JOIN режиссер р on р.id = ф.idрежиссер
+         JOIN возрастноеограничение в on в.id = ф.idвозраст
+WHERE ж.название = %s'''
+            c.execute(sql, (genre,))
+            return c.fetchall(), c.description
+
     def get_film_typehall(self, idfilm):
         with self.conn.cursor() as c:
             sql = 'SELECT т.id FROM форматыфильмов JOIN типзала т on т.id = форматыфильмов.idтипзала WHERE idфильм = %s'
@@ -375,6 +493,25 @@ FROM билетнаместо
 WHERE idсеанс = %s
 ORDER BY п.фио, номерряда, номерместа"""
             c.execute(sql, (idsess,))
+            return c.fetchall(), c.description
+
+    def get_variety(self):
+        with self.conn.cursor() as c:
+            sql = """select кинотеатр.id,
+       кинотеатр.название as `Кинотеатр`,
+       адрес              as `Адрес`,
+       count(*)           as `Количество фильмов`
+from кинотеатр
+         join
+     (select distinct зал.idкинотеатр, сеанс.idфильм
+      from сеанс
+               join зал on сеанс.idзал = зал.id
+      where сеанс.датавремя > now()
+        and сеанс.датавремя <= now() + interval 1 week) a
+     on кинотеатр.id = a.idкинотеатр
+group by кинотеатр
+order by `Количество фильмов` desc, `Кинотеатр`;"""
+            c.execute(sql)
             return c.fetchall(), c.description
 
     def add_user(self, name, email, number, hash_):

@@ -30,9 +30,11 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.open_typehall_btn.clicked.connect(self.fopen_typehall)
         self.open_hall_btn.clicked.connect(self.fopen_hall)
         self.open_session_btn.clicked.connect(self.fopen_session)
+        self.money_btn.clicked.connect(self.fopen_money)
         self.db = db
         self.table_film = None
         self.table_genre = None
+        self.table_genre2 = None
         self.table_producer = None
         self.table_restrict = None
         self.table_typesess = None
@@ -42,6 +44,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.table_filmsess = None
         self.table_session = None
         self.table_session1 = None
+        self.table_money = None
         self.OpenGenre = None
         self.OpenProducer = None
         self.OpenRestrict = None
@@ -233,12 +236,34 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         if res:
             self.table_film = Table(res, names, self.change_film, "Обновить",
                                     self.delete_film,
-                                    "Удалить", "Таблица фильмов")
+                                    "Удалить", "Таблица фильмов", self.ffopen_genre, "Жанры")
             self.table_film.show()
         else:
             if self.table_film:
                 self.table_film.close()
             self.msg.setText("Нет фильмов для просмотра.")
+            self.msg.show()
+
+    def fopen_money(self):
+        res, names = self.db.get_money()
+        if res:
+            self.table_money = Table(res, names, table_title="Ожидаемая выручка за предстоящую неделю")
+            self.table_money.show()
+        else:
+            if self.table_money:
+                self.table_money.close()
+            self.msg.setText("Нет данных для расчета выручки.")
+            self.msg.show()
+
+    def ffopen_genre(self, idfilm):
+        res, names = self.db.get_genre_film(idfilm)
+        if res:
+            self.table_genre2 = Table(res, names, table_title="Жанры фильма")
+            self.table_genre2.show()
+        else:
+            if self.table_genre2:
+                self.table_genre2.close()
+            self.msg.setText("У фильма нет жанров.")
             self.msg.show()
 
     def fopen_genre(self):
