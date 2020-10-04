@@ -336,10 +336,13 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
         self.db.delete_old_session()
         res, names = self.db.get_all_session()
         if res:
-            self.table_session1 = Table(res, names, self.change_session, "Обновить",
-                                       self.delete_session, "Удалить",
-                                       "Таблица сеансов", self.fopen_buyers,
-                                       "Покупки")
+            self.table_session1 = Table(res, names, button_edit=self.change_session,
+                                        button_edit_text="Обновить",
+                                        button_delete=self.delete_session,
+                                        button_delete_text="Удалить",
+                                        table_title="Таблица сеансов",
+                                        button_new=self.fopen_buyers,
+                                        button_new_text="Покупки")
             self.table_session1.show()
         else:
             if self.table_session1:
@@ -350,7 +353,7 @@ class MainApp(QtWidgets.QMainWindow, main.Ui_MainWindow):
     def fopen_buyers(self, idsess):
         res, names = self.db.get_session_buyers(idsess)
         if res:
-            self.table_session = Table(res, names, "Таблица покупок")
+            self.table_session = Table(res, names, table_title="Таблица покупок")
             self.table_session.show()
         else:
             if self.table_session:
@@ -979,7 +982,7 @@ class AddSessionApp(QtWidgets.QMainWindow, session1.Ui_MainWindow):
             self.cinema.setCurrentText(cinema_addr)
             self.load_halls(cinema_addr)
             self.hall.setCurrentText(self.db.get_one_hall(data[2])[1])
-            if not self.db.number_bue_session(self.data[0]):
+            if self.db.number_bue_session(self.data[0]):
                 self.cinema.setDisabled(True)
                 self.dateTime.setDisabled(True)
             self.pushButton_2.setText("Изменить сеанс")

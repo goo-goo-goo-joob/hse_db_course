@@ -101,12 +101,12 @@ ORDER BY к.адрес, название"""
     def get_all_film(self):
         with self.conn.cursor() as c:
             sql = """SELECT фильм.id,
-       название,
-       описание,
-       год,
-       длительность,
-       возраст,
-       фио
+       название as 'Название',
+       описание as 'Описание',
+       год as 'Год',
+       длительность as 'Длительность',
+       возраст as 'Ограничение',
+       фио as 'Режиссер'
 FROM фильм
          JOIN возрастноеограничение в on в.id = фильм.idвозраст
          JOIN режиссер р on р.id = фильм.idрежиссер
@@ -117,12 +117,12 @@ ORDER BY название, год, р.фио"""
     def get_all_session(self):
         with self.conn.cursor() as c:
             sql = """SELECT сеанс.id,
-       ф.название,
-       р.фио,
-       ф.год,
-       к.адрес,
-       з.название,
-       сеанс.датавремя
+       ф.название as 'Фильм',
+       р.фио as 'Режиссер',
+       ф.год as 'Год',
+       к.адрес as 'Кинотеатр',
+       з.название as 'Зал',
+       сеанс.датавремя as 'Дата'
 FROM сеанс
          JOIN зал з on з.id = сеанс.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
@@ -264,6 +264,22 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
             c.execute(sql, uid)
             return c.fetchone()[0]
 
+    def get_user_tikets(self, uid):
+        with self.conn.cursor() as c:
+            sql = '''SELECT билетнаместо.id,
+       ф.название as 'Фильм',
+       к.название as 'Кинотеатр',
+       с.датавремя as 'Дата',
+       с.цена as 'Стоимость'
+FROM билетнаместо
+         JOIN сеанс с on с.id = билетнаместо.idсеанс
+         JOIN фильм ф on ф.id = с.idфильм
+         JOIN зал з on з.id = с.idзал
+         JOIN кинотеатр к on к.id = з.idкинотеатр
+WHERE idпокупатель = %s'''
+            c.execute(sql, uid)
+            return c.fetchall(), c.description
+
     def get_all_user_numbers(self):
         with self.conn.cursor() as c:
             sql = "SELECT фио, телефон FROM покупатель WHERE телефон IS NOT NULL "
@@ -283,7 +299,7 @@ FROM билетнаместо
          JOIN покупатель п on п.id = билетнаместо.idпокупатель
 WHERE idсеанс = %s
 ORDER BY п.фио, номерряда, номерместа"""
-            c.execute(sql, (idsess, ))
+            c.execute(sql, (idsess,))
             return c.fetchall(), c.description
 
     def add_user(self, name, email, number, hash_):
@@ -487,6 +503,16 @@ VALUES (%s, %s, %s, %s, %s, %s)'''
             raise DBException(message) from e
         except Exception as e:
             raise DBException("Не удалось добавить сеанс.") from e
+
+    def buy_places(self, idsess, places, uid):
+        try:
+            with self.conn.cursor() as c:
+                for pl in places:
+                    sql = 'UPDATE билетнаместо SET idпокупатель = %s WHERE idсеанс = %s AND номерряда = %s AND номерместа = %s'
+                    c.execute(sql, (uid, idsess, pl[0], pl[1]))
+                self.conn.commit()
+        except Exception as e:
+            raise DBException("Не удалось купить билеты. Попрообуйте снова.") from e
 
     def update_genre(self, gid, name):
         try:
@@ -856,10 +882,3 @@ WHERE датавремя + ф.длительность < NOW()"""
                 self.conn.commit()
         except Exception as e:
             raise DBException("Не удалось удалить сеанс.") from e
-
-
-if __name__ == '__main__':
-    db = DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'), os.getenv('DB_PASSWORD'),
-                  os.getenv('DB_DATABASE'))
-    # print(*db.get_all_stuff(), sep='\n==================\n')
-    db.close()

@@ -32,6 +32,19 @@
      </widget>
     </item>
     <item>
+     <widget class="QPushButton" name="tickets">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Мои билеты</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QPushButton" name="cinema_btn">
       <property name="font">
        <font>
@@ -45,7 +58,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="film_btn">
       <property name="font">
        <font>
         <family>Candara</family>
