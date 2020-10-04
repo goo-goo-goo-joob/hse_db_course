@@ -11,11 +11,6 @@ order by `Количество фильмов` desc, `Кинотеатр`;
 
 # HAVING - вывести те кинотеатры, в которых минимальная цена билета на ближайшую неделю не больше заданного значения
 # вход - максимальная цена price
-drop procedure if exists func1;
-delimiter $$
-
-create procedure func1(price int unsigned)
-begin
 select кинотеатр.название as `Кинотеатр`, адрес as `Адрес`, min(a.цена) `Минимальная цена билета`
 from кинотеатр join
 (select зал.idкинотеатр, сеанс.цена
@@ -23,13 +18,8 @@ from сеанс join зал on сеанс.idзал = зал.id
 where сеанс.датавремя > now() and сеанс.датавремя <= now() + interval 1 week) a
 on кинотеатр.id = a.idкинотеатр
 group by кинотеатр
-having min(a.цена) <= price
+having min(a.цена) <= %s
 order by min(a.цена), `Кинотеатр`;
-end $$
-
-delimiter ;
-
-call func1(300);
 
 # SUM - *для админки* ожидаемая выручка по кинотеатрам за ближайшую неделю
 # входных данных нет
