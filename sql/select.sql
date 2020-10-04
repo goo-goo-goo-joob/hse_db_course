@@ -6,6 +6,9 @@ order by фильм.id;
 
 
 select * from сеанс;
-select * from билетнаместо;
+select * from билетнаместо
+order by id desc;
 select * from фильм
 order by год;
+select * from покупатель
+order by id desc;
