@@ -177,6 +177,7 @@ class OpenBuyCinemaApp(QtWidgets.QMainWindow, buy_on_cinema.Ui_MainWindow):
 
     def ok(self):
         self.msg.close()
+        self.open_cinema_session()
 
     def open_cinema_session(self):
         cinema = self.cinema.currentText()
@@ -245,6 +246,7 @@ class OpenDateApp(QtWidgets.QMainWindow, day_form.Ui_MainWindow):
 
     def ok(self):
         self.msg.close()
+        self.open_cinema_session()
 
     def open_cinema_session(self):
         date = self.date.selectedDate().toString('yyyy-MM-dd')
@@ -262,7 +264,7 @@ class OpenDateApp(QtWidgets.QMainWindow, day_form.Ui_MainWindow):
             else:
                 if self.table_session1:
                     self.table_session1.close()
-                self.msg.setText("На указанную дату нет просмотров выбранного фильма.")
+                self.msg.setText("На указанную дату нет сеансов выбранного фильма.")
                 self.msg.show()
 
     def buy_form(self, idsess):

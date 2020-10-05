@@ -1,5 +1,3 @@
-import os
-
 import pymysql
 
 
@@ -52,7 +50,9 @@ ORDER BY ж.название"""
 
     def get_all_restrict(self):
         with self.conn.cursor() as c:
-            sql = """SELECT * FROM возрастноеограничение ORDER BY CHAR_LENGTH(возраст), возраст"""
+            sql = """SELECT *
+FROM возрастноеограничение
+ORDER BY CHAR_LENGTH(возраст), возраст"""
             c.execute(sql)
             return c.fetchall(), c.description
 
@@ -94,12 +94,13 @@ ORDER BY кинотеатр.название, адрес"""
 
     def get_allcinema_hall1(self, cinema, film):
         with self.conn.cursor() as c:
-            sql = """SELECT DISTINCT (название)
+            sql = """SELECT DISTINCT (зал.название)
 FROM зал
          JOIN форматыфильмов ф on зал.idтипзала = ф.idтипзала
-WHERE idкинотеатр = %s
+         JOIN кинотеатр к on к.id = зал.idкинотеатр
+WHERE к.адрес = %s
   and ф.idфильм = %s"""
-            c.execute(sql, (self.get_id_cinema(cinema), film))
+            c.execute(sql, (cinema, film))
             return c.fetchall()
 
     def get_all_typehall(self):
@@ -174,10 +175,10 @@ FROM фильм
          LEFT JOIN сеанс с on фильм.id = с.idфильм
          JOIN (SELECT idсеанс, COUNT(id) as tot
                FROM билетнаместо
-               WHERE idпокупатель IS NOT NULL
+               WHERE idпокупатель IS NULL
                GROUP BY idсеанс) t on t.idсеанс = с.id
 WHERE с.id IS NOT NULL
-  AND с.длинаряда * с.числорядов != t.tot
+  AND t.tot != 0
 ORDER BY название, год, р.фио;"""
             c.execute(sql)
             return c.fetchall(), c.description
@@ -247,9 +248,9 @@ from кинотеатр
      on кинотеатр.id = a.idкинотеатр
          JOIN (SELECT idсеанс, COUNT(id) as tot
                FROM билетнаместо
-               WHERE idпокупатель IS NOT NULL
+               WHERE idпокупатель IS NULL
                GROUP BY idсеанс) t on t.idсеанс = с.id
-WHERE с.длинаряда * с.числорядов != t.tot
+WHERE t.tot != 0
 group by кинотеатр
 having min(a.цена) <= %s
 order by min(a.цена), `Кинотеатр`;"""
@@ -259,13 +260,13 @@ order by min(a.цена), `Кинотеатр`;"""
     def get_all_session_bycinematime(self, cinema, time):
         with self.conn.cursor() as c:
             sql = """SELECT сеанс.id,
+       сеанс.датавремя as ' Дата',
        ф.название      as 'Фильм',
        р.фио           as 'Режиссер',
        ф.год           as 'Год',
        к.адрес         as 'Кинотеатр',
-       сеанс.датавремя as ' Дата',
        сеанс.цена      as 'Стоимость',
-       сеанс.длинаряда * сеанс.числорядов - t.tot as 'Свободно'
+       t.tot as 'Свободно'
 FROM сеанс
          JOIN зал з on з.id = сеанс.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
@@ -273,14 +274,14 @@ FROM сеанс
          JOIN режиссер р on р.id = ф.idрежиссер
          JOIN (SELECT idсеанс, COUNT(id) as tot
                FROM билетнаместо
-               WHERE idпокупатель IS NOT NULL
+               WHERE idпокупатель IS NULL
                GROUP BY idсеанс) t on t.idсеанс = сеанс.id
 WHERE к.адрес = %s
   AND (date(сеанс.датавремя) = date(%s) and time(сеанс.датавремя) >= time('4:00')
     or date(сеанс.датавремя) = date(%s) + Interval 1 day and
        time(сеанс.датавремя) < time('4:00'))
-  AND сеанс.длинаряда * сеанс.числорядов != t.tot
-ORDER BY ф.название, р.фио, ф.год, к.адрес, з.название, сеанс.датавремя, сеанс.цена;"""
+  AND t.tot != 0
+ORDER BY сеанс.датавремя, ф.название, р.фио, ф.год, к.адрес, з.название, сеанс.цена;"""
             c.execute(sql, (cinema, time, time))
             return c.fetchall(), c.description
 
@@ -290,19 +291,19 @@ ORDER BY ф.название, р.фио, ф.год, к.адрес, з.назва
        к.адрес         as 'Кинотеатр',
        сеанс.датавремя as ' Дата',
        сеанс.цена as 'Стоимость',
-       сеанс.длинаряда * сеанс.числорядов - t.tot as 'Свободно'
+       t.tot as 'Свободно'
 FROM сеанс
          JOIN зал з on з.id = сеанс.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
          JOIN (SELECT idсеанс, COUNT(id) as tot
                FROM билетнаместо
-               WHERE idпокупатель IS NOT NULL
+               WHERE idпокупатель IS NULL
                GROUP BY idсеанс) t on t.idсеанс = сеанс.id
 WHERE сеанс.idфильм = %s
   AND (date(сеанс.датавремя) = date(%s) and time(сеанс.датавремя) >= time('4:00')
     or date(сеанс.датавремя) = date(%s) + Interval 1 day and
        time(сеанс.датавремя) < time('4:00'))
-  AND сеанс.длинаряда * сеанс.числорядов != t.tot
+  AND t.tot != 0
 ORDER BY к.адрес, сеанс.датавремя, сеанс.цена;"""
             c.execute(sql, (idfilm, time, time))
             return c.fetchall(), c.description
@@ -435,7 +436,10 @@ WHERE ж.название = %s'''
 
     def get_film_typehall(self, idfilm):
         with self.conn.cursor() as c:
-            sql = 'SELECT т.id FROM форматыфильмов JOIN типзала т on т.id = форматыфильмов.idтипзала WHERE idфильм = %s'
+            sql = '''SELECT т.id
+FROM форматыфильмов
+         JOIN типзала т on т.id = форматыфильмов.idтипзала
+WHERE idфильм = %s'''
             c.execute(sql, (idfilm,))
             return c.fetchall()
 
