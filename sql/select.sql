@@ -43,3 +43,17 @@ and билетнаместо.idпокупатель is not null) a
 on кинотеатр.id = a.idкинотеатр
 group by кинотеатр
 order by sum(a.цена) desc, `Кинотеатр`;
+
+select * from типзала;
+select * from кинотеатр;
+select * from типсеанса;
+select * from жанр;
+select * from режиссер order by id;
+select * from возрастноеограничение order by id;
+select * from фильм;
+select * from зал;
+select * from форматыфильмов;
+select * from жанрыфильмов;
+select * from покупатель;
+select * from сеанс;
+select * from билетнаместо;
