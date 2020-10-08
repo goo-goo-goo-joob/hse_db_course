@@ -162,7 +162,7 @@ ORDER BY название, год, р.фио"""
         возвращает все фильмы на которые есть сеансы и свободные места
         '''
         with self.conn.cursor() as c:
-            sql = """SELECT фильм.id,
+            sql = """SELECT DISTINCT фильм.id,
        название     as 'Название',
        описание     as 'Описание',
        год          as 'Год',
@@ -464,16 +464,20 @@ WHERE idфильм = %s'''
     def get_user_tikets(self, uid):
         with self.conn.cursor() as c:
             sql = '''SELECT билетнаместо.id,
+       с.датавремя as 'Дата',
        ф.название as 'Фильм',
        к.название as 'Кинотеатр',
-       с.датавремя as 'Дата',
+       з.название as 'Зал',
+       номерряда as 'Ряд',
+       номерместа as 'Место',
        с.цена as 'Стоимость'
 FROM билетнаместо
          JOIN сеанс с on с.id = билетнаместо.idсеанс
          JOIN фильм ф on ф.id = с.idфильм
          JOIN зал з on з.id = с.idзал
          JOIN кинотеатр к on к.id = з.idкинотеатр
-WHERE idпокупатель = %s'''
+WHERE idпокупатель = %s
+ORDER BY 'Дата', 'Кинотеатр', 'Зал', 'Ряд', 'Место', 'Стоимость', 'Фильм' '''
             c.execute(sql, uid)
             return c.fetchall(), c.description
 

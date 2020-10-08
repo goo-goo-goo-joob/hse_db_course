@@ -1,5 +1,3 @@
-import os
-
 from PyQt5 import QtWidgets
 
 from db_cinema_project.admin_cabinet import MainApp
@@ -29,8 +27,8 @@ class AuthApp(QtWidgets.QMainWindow, auth_form.Ui_MainWindow):
         login = self.login.text()
         password = self.password.text()
         try:
-            self.db = utils.DBCinema('localhost', os.getenv('DB_USER', login),
-                                     os.getenv('DB_PASSWORD', password),
+            self.db = utils.DBCinema('localhost', login,
+                                     password,
                                      'cinemadb')
             self.close()
             self.Open = MainApp(self.db)

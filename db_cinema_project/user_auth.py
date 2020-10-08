@@ -32,8 +32,8 @@ class EnterApp(QtWidgets.QMainWindow, enter_form.Ui_MainWindow):
     def enter(self):
         email = self.lineEdit.text()
         password = self.lineEdit_2.text()
-        email = email if email else 'mvsamodelkina@edu.hse.ru' #None
-        password = password if password else 'mypass' #None
+        email = email if email else None
+        password = password if password else None
         if not email:
             self.msg.setText("Введите почту.")
             self.msg.show()
@@ -41,8 +41,8 @@ class EnterApp(QtWidgets.QMainWindow, enter_form.Ui_MainWindow):
             self.msg.setText("Введите пароль.")
             self.msg.show()
         else:
-            self.db = utils.DBCinema(os.getenv('DB_HOST'), os.getenv('DB_USER'),
-                                     os.getenv('DB_PASSWORD'),
+            self.db = utils.DBCinema(os.getenv('DB_HOST'), 'user0',
+                                     '',
                                      os.getenv('DB_DATABASE'))
             res = self.db.check_for_email(email)
             hasher = PBKDF2PasswordHasher()
