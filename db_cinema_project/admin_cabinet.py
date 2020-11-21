@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from db_cinema_project.db.utils import DBException
 from db_cinema_project.ui import main, add_film, genre, producer, restrict, typesess, \
-    cinema, typehall, hall, session1, session2
+    cinema, typehall, hall, session1
 from db_cinema_project.utils.table import Table
 
 

@@ -54,7 +54,6 @@ class Table(QtWidgets.QWidget):
                 self.tableWidget.setCellWidget(row_number, len(row_data[1:]) + 2,
                                                btn_new)
 
-
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.tableWidget)
         self.setLayout(self.layout)
