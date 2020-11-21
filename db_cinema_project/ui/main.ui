@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>442</width>
+    <height>660</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Кабинет администратора</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="29" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_9">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование типов сеансов:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="22" column="1">
+     <widget class="QPushButton" name="add_hall_btn">
+      <property name="text">
+       <string>Добавить зал</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_3">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование режиссеров:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="16" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_5">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование кинотеатров:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="18" column="2">
+     <widget class="QPushButton" name="open_cinema_btn">
+      <property name="text">
+       <string>Просмотр кинотеатров</string>
+      </property>
+     </widget>
+    </item>
+    <item row="32" column="2">
+     <widget class="QPushButton" name="open_typesess_btn">
+      <property name="text">
+       <string>Просмотр типов сеансов</string>
+      </property>
+     </widget>
+    </item>
+    <item row="28" column="2">
+     <widget class="QPushButton" name="open_session_btn">
+      <property name="text">
+       <string>Просмотр сеансов</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="1">
+     <widget class="QPushButton" name="add_typehall_btn">
+      <property name="text">
+       <string>Добавить тип зала</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="2">
+     <widget class="QPushButton" name="open_genre_btn">
+      <property name="text">
+       <string>Просмотр жанров</string>
+      </property>
+     </widget>
+    </item>
+    <item row="20" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_6">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование залов:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="23" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_7">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование типов залов:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QPushButton" name="add_film_btn">
+      <property name="text">
+       <string>Добавить фильм</string>
+      </property>
+     </widget>
+    </item>
+    <item row="22" column="2">
+     <widget class="QPushButton" name="open_hall_btn">
+      <property name="text">
+       <string>Просмотр залов</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="2">
+     <widget class="QPushButton" name="open_restrict_btn">
+      <property name="text">
+       <string>Просмотр ограничений</string>
+      </property>
+     </widget>
+    </item>
+    <item row="26" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_8">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование сеансов:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование фильмов:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QPushButton" name="open_film_btn">
+      <property name="text">
+       <string>Просмотр фильмов</string>
+      </property>
+     </widget>
+    </item>
+    <item row="32" column="1">
+     <widget class="QPushButton" name="add_typesess_btn">
+      <property name="text">
+       <string>Добавить тип сеанса</string>
+      </property>
+     </widget>
+    </item>
+    <item row="28" column="1">
+     <widget class="QPushButton" name="add_session_btn">
+      <property name="text">
+       <string>Добавить сеанс</string>
+      </property>
+     </widget>
+    </item>
+    <item row="12" column="1">
+     <widget class="QPushButton" name="add_producer_btn">
+      <property name="text">
+       <string>Добавить режиссера</string>
+      </property>
+     </widget>
+    </item>
+    <item row="18" column="1">
+     <widget class="QPushButton" name="add_cinema_btn">
+      <property name="text">
+       <string>Добавить кинотеатр</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_2">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование жанров:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="2">
+     <widget class="QPushButton" name="open_typehall_btn">
+      <property name="text">
+       <string>Просмотр типов залов</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="1">
+     <widget class="QPushButton" name="add_restrict_btn">
+      <property name="text">
+       <string>Добавить ограничение</string>
+      </property>
+     </widget>
+    </item>
+    <item row="13" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label_4">
+      <property name="font">
+       <font>
+        <family>Candara</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Администрирование ограничений:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="12" column="2">
+     <widget class="QPushButton" name="open_producer_btn">
+      <property name="text">
+       <string>Просмотр режиссеров</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="1">
+     <widget class="QPushButton" name="add_genre_btn">
+      <property name="text">
+       <string>Добавить жанр</string>
+      </property>
+     </widget>
+    </item>
+    <item row="17" column="2">
+     <widget class="QPushButton" name="money_btn">
+      <property name="text">
+       <string>Ожидаемая выручка</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>442</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
