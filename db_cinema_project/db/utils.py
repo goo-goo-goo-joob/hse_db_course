@@ -407,8 +407,8 @@ ORDER BY к.адрес, сеанс.датавремя, сеанс.цена;"""
     def get_id_hall(self, hall, cinema):
         with self.conn.cursor() as c:
             sql = '''SELECT зал.id 
-            FROM зал JOIN кинотеатр к on к.id = зал.idкинотеатр 
-            WHERE зал.название = %s AND к.адрес = %s'''
+FROM зал JOIN кинотеатр к on к.id = зал.idкинотеатр 
+WHERE зал.название = %s AND к.адрес = %s'''
             c.execute(sql, (hall, cinema))
             return c.fetchone()[0]
 
@@ -731,8 +731,8 @@ VALUES (%s, %s, %s, %s, %s, %s)'''
             with self.conn.cursor() as c:
                 for pl in places:
                     sql = '''UPDATE билетнаместо 
-                    SET idпокупатель = %s 
-                    WHERE idсеанс = %s AND номерряда = %s AND номерместа = %s'''
+SET idпокупатель = %s 
+WHERE idсеанс = %s AND номерряда = %s AND номерместа = %s'''
                     c.execute(sql, (uid, idsess, pl[0], pl[1]))
                 self.conn.commit()
         except Exception as e:
@@ -793,8 +793,8 @@ VALUES (%s, %s, %s, %s, %s, %s)'''
         try:
             with self.conn.cursor() as c:
                 sql = '''UPDATE типсеанса 
-                SET название = %s, времяначала = %s, времяконца = %s, надбавкасеанса = %s 
-                WHERE id = %s'''
+SET название = %s, времяначала = %s, времяконца = %s, надбавкасеанса = %s 
+WHERE id = %s'''
                 c.execute(sql, (name, begin, end, add, gid,))
                 self.conn.commit()
         except pymysql.IntegrityError as e:
@@ -852,8 +852,8 @@ VALUES (%s, %s, %s, %s, %s, %s)'''
         try:
             with self.conn.cursor() as c:
                 sql = '''UPDATE зал 
-                SET название = %s, длинаряда = %s, числорядов = %s, idтипзала = %s, idкинотеатр = %s 
-                WHERE id = %s'''
+SET название = %s, длинаряда = %s, числорядов = %s, idтипзала = %s, idкинотеатр = %s 
+WHERE id = %s'''
                 c.execute(sql, (name, length, number, typehall, cinema, gid,))
                 self.conn.commit()
         except pymysql.IntegrityError as e:
@@ -975,7 +975,7 @@ WHERE idфильм = %s
 FROM сеанс
          JOIN фильм ф on ф.id = сеанс.idфильм
 WHERE сеанс.id = %s
-  and датавремя + ф.длительность >= NOW() 
+and датавремя + ф.длительность >= NOW() 
   and датавремя < NOW()"""
             c.execute(sql, (idsession))
             return c.rowcount
