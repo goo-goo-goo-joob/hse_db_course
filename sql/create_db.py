@@ -54,8 +54,8 @@ def main():
                   os.getenv('DB_PASSWORD'),
                   os.getenv('DB_DATABASE'))
     db.create()
-    # db.triggers()
-    # db.insert()
+    db.triggers()
+    db.insert()
     db.close()
 
 
