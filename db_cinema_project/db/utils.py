@@ -406,8 +406,8 @@ ORDER BY к.адрес, сеанс.датавремя, сеанс.цена;"""
 
     def get_id_hall(self, hall, cinema):
         with self.conn.cursor() as c:
-            sql = '''SELECT зал.id 
-FROM зал JOIN кинотеатр к on к.id = зал.idкинотеатр 
+            sql = '''SELECT зал.id
+FROM зал JOIN кинотеатр к on к.id = зал.idкинотеатр
 WHERE зал.название = %s AND к.адрес = %s'''
             c.execute(sql, (hall, cinema))
             return c.fetchone()[0]
@@ -730,8 +730,8 @@ VALUES (%s, %s, %s, %s, %s, %s)'''
         try:
             with self.conn.cursor() as c:
                 for pl in places:
-                    sql = '''UPDATE билетнаместо 
-SET idпокупатель = %s 
+                    sql = '''UPDATE билетнаместо
+SET idпокупатель = %s
 WHERE idсеанс = %s AND номерряда = %s AND номерместа = %s'''
                     c.execute(sql, (uid, idsess, pl[0], pl[1]))
                 self.conn.commit()
@@ -792,8 +792,8 @@ WHERE idсеанс = %s AND номерряда = %s AND номерместа = %
     def update_typesess(self, gid, name, begin, end, add):
         try:
             with self.conn.cursor() as c:
-                sql = '''UPDATE типсеанса 
-SET название = %s, времяначала = %s, времяконца = %s, надбавкасеанса = %s 
+                sql = '''UPDATE типсеанса
+SET название = %s, времяначала = %s, времяконца = %s, надбавкасеанса = %s
 WHERE id = %s'''
                 c.execute(sql, (name, begin, end, add, gid,))
                 self.conn.commit()
@@ -851,8 +851,8 @@ WHERE id = %s'''
     def update_hall(self, gid, name, length, number, typehall, cinema):
         try:
             with self.conn.cursor() as c:
-                sql = '''UPDATE зал 
-SET название = %s, длинаряда = %s, числорядов = %s, idтипзала = %s, idкинотеатр = %s 
+                sql = '''UPDATE зал
+SET название = %s, длинаряда = %s, числорядов = %s, idтипзала = %s, idкинотеатр = %s
 WHERE id = %s'''
                 c.execute(sql, (name, length, number, typehall, cinema, gid,))
                 self.conn.commit()
@@ -874,7 +874,8 @@ WHERE id = %s'''
                     idgenre, idproducer, idrestrict, idtypehall):
         try:
             with self.conn.cursor() as c:
-                sql = '''UPDATE фильм SET название = %s, описание = %s, год = %s, длительность = %s, idрежиссер = %s, idвозраст = %s
+                sql = '''UPDATE фильм
+SET название = %s, описание = %s, год = %s, длительность = %s, idрежиссер = %s, idвозраст = %s
 WHERE id = %s'''
                 c.execute(sql,
                           (name, descript, year, duration, idproducer, idrestrict, gid))
@@ -975,7 +976,7 @@ WHERE idфильм = %s
 FROM сеанс
          JOIN фильм ф on ф.id = сеанс.idфильм
 WHERE сеанс.id = %s
-and датавремя + ф.длительность >= NOW() 
+and датавремя + ф.длительность >= NOW()
   and датавремя < NOW()"""
             c.execute(sql, (idsession))
             return c.rowcount
